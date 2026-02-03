@@ -17,22 +17,18 @@
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
-
     <div class="w-full max-w-md">
         <header class="text-center mb-8">
-            <h1 class="text-2xl font-semibold tracking-tight">Production OLDA</h1>
+            <h1 class="text-2xl font-semibold tracking-tight text-gray-900">Production OLDA</h1>
             <p class="text-gray-400 text-sm">Collection 2026</p>
         </header>
 
         <div class="glass bg-white p-8 shadow-2xl shadow-gray-200">
             <form id="orderForm">
-                
                 <div class="step active" id="step1">
                     <h2 class="text-xl font-semibold mb-6 text-gray-800">Identité</h2>
-                    <div class="space-y-4">
-                        <input type="text" id="client" placeholder="Nom & Prénom" required>
-                        <input type="tel" id="tel" placeholder="N° de téléphone" required>
-                    </div>
+                    <input type="text" id="client" placeholder="Nom & Prénom" class="mb-4" required>
+                    <input type="tel" id="tel" placeholder="N° de téléphone" required>
                     <button type="button" onclick="goToStep(2)" class="btn-blue w-full mt-8">Continuer</button>
                 </div>
 
@@ -40,39 +36,35 @@
                     <h2 class="text-xl font-semibold mb-6 text-gray-800">Sélection</h2>
                     <select id="modele" required>
                         <option value="">Choisir un modèle...</option>
-                        <optgroup label="Homme">
+                        <optgroup label="Collection Homme">
                             <option value="H-Gero1">H-Gero1 (35€)</option>
                             <option value="H-Iconic">H-Iconic (39€)</option>
-                            <option value="H-Premium">H-Premium (45€)</option>
                         </optgroup>
-                        <optgroup label="Femme">
+                        <optgroup label="Collection Femme">
                             <option value="F-Gero1">F-Gero1 (35€)</option>
-                            <option value="F-Iconic">F-Iconic (39€)</option>
                         </optgroup>
                     </select>
                     <div class="flex items-center justify-between mt-8">
-                        <button type="button" onclick="goToStep(1)" class="text-gray-400">Retour</button>
+                        <button type="button" onclick="goToStep(1)" class="text-gray-400 font-medium">Retour</button>
                         <button type="button" onclick="goToStep(3)" class="btn-blue px-8">Suivant</button>
                     </div>
                 </div>
 
                 <div class="step" id="step3">
                     <h2 class="text-xl font-semibold mb-6 text-gray-800">Atelier</h2>
-                    <textarea id="technique" placeholder="Détails techniques (logos, dimensions...)" rows="3"></textarea>
+                    <textarea id="technique" placeholder="Détails techniques (logos, RAL, dimensions...)" rows="3"></textarea>
                     <input type="date" id="delai" class="mt-4">
-                    
                     <div class="flex items-center justify-between mt-8">
-                        <button type="button" onclick="goToStep(2)" class="text-gray-400">Retour</button>
+                        <button type="button" onclick="goToStep(2)" class="text-gray-400 font-medium">Retour</button>
                         <button type="submit" id="submitBtn" class="bg-black text-white px-8 py-3 rounded-full font-medium">Valider</button>
                     </div>
                 </div>
-
             </form>
         </div>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCmn8nM8n60HhyowTbOELUYJ5xPkzkXdRtdk_XsZIHqgCSh_qq9at2Z_UxFsYSr5Bl/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDUNfBS4MgUqtHxcHgA6A2w2tAXYisSvAuBGKWJyIQ6BeeV0DJALWYC6QbI7bQKqJT/exec";
 
         function goToStep(num) {
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
@@ -85,7 +77,7 @@
             btn.disabled = true;
             btn.innerText = "Envoi...";
 
-            const data = {
+            const payload = {
                 client: document.getElementById('client').value,
                 tel: document.getElementById('tel').value,
                 modele: document.getElementById('modele').value,
@@ -97,12 +89,12 @@
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(payload)
                 });
-                alert('Commande enregistrée dans Production OLDA 2026 !');
+                alert('Commande bien enregistrée dans le tableau !');
                 location.reload();
             } catch (error) {
-                alert('Erreur réseau. Réessayez.');
+                alert('Erreur technique. Vérifiez la connexion.');
                 btn.disabled = false;
                 btn.innerText = "Valider";
             }
