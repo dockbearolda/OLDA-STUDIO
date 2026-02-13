@@ -3,237 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>T-Shirt Designer Pro</title>
+    <title>Commande T-Shirt</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root { --apple-blue: #007AFF; --apple-bg: #F5F5F7; }
         body { font-family: -apple-system, sans-serif; background-color: var(--apple-bg); color: #1d1d1f; -webkit-font-smoothing: antialiased; }
         .ios-card { background: white; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        .ios-input { background: #f2f2f7; border: none; border-radius: 12px; padding: 16px; font-size: 17px; width: 100%; outline: none; }
-        .ios-btn { background: var(--apple-blue); color: white; border-radius: 14px; padding: 18px; font-size: 17px; font-weight: 600; width: 100%; transition: all 0.2s; }
+        .ios-input { background: #f2f2f7; border: none; border-radius: 12px; padding: 14px; font-size: 16px; width: 100%; outline: none; -webkit-appearance: none; }
+        .ios-btn { background: var(--apple-blue); color: white; border-radius: 14px; padding: 16px; font-size: 17px; font-weight: 600; width: 100%; text-align: center; }
         .ios-btn:active { transform: scale(0.97); opacity: 0.9; }
-        .step-container { display: none; flex-direction: column; gap: 20px; animation: fadeIn 0.4s ease forwards; }
+        .step-container { display: none; flex-direction: column; gap: 15px; animation: fadeIn 0.3s ease-out; }
         .step-container.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .canvas-container { margin: 0 auto !important; border-radius: 20px; overflow: hidden; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .tab-btn { padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 14px; }
-        .tab-btn.active { background: var(--apple-blue); color: white; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+        canvas { border-radius: 15px; }
+        .tab-btn { flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: 600; border-radius: 10px; }
+        .tab-btn.active { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); color: var(--apple-blue); }
     </style>
 </head>
-<body class="min-h-screen w-full flex flex-col p-4">
+<body class="min-h-screen flex flex-col p-4">
 
-    <div class="max-w-md mx-auto w-full pt-4 pb-8 text-center">
-        <h1 class="text-xl font-bold tracking-tight">Studio Création</h1>
-        <div class="h-1.5 w-full bg-gray-200 mt-4 rounded-full overflow-hidden">
-            <div id="progress-bar" class="h-full bg-blue-500 w-0 transition-all duration-500"></div>
+    <div class="max-w-md mx-auto w-full pt-2 pb-6">
+        <div class="flex justify-between items-end">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Nouveau Dossier</p>
+                <h1 class="text-2xl font-bold">Commande</h1>
+            </div>
+            <div id="step-count" class="text-xs font-bold bg-gray-200 px-3 py-1 rounded-full">1 / 5</div>
+        </div>
+        <div class="h-1 w-full bg-gray-200 mt-4 rounded-full overflow-hidden">
+            <div id="progress-bar" class="h-full bg-blue-500 w-1/5 transition-all duration-500"></div>
         </div>
     </div>
 
     <div class="max-w-md mx-auto w-full flex-grow">
 
         <div id="step-1" class="step-container active">
-            <h2 class="text-3xl font-bold">Client</h2>
-            <div class="space-y-4">
-                <input type="text" id="input-client" class="ios-input" placeholder="Nom du client">
-                <input type="tel" id="input-phone" class="ios-input" placeholder="Numéro de téléphone">
-                <button onclick="nextStep(2)" class="ios-btn mt-4">Continuer</button>
+            <div class="ios-card p-5 space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-400 ml-1">N° COMMANDE (Case A)</label>
+                    <input type="text" id="orderNo" class="ios-input mt-1" placeholder="Ex: 2024-001">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-400 ml-1">NOM DU CLIENT (Case C)</label>
+                    <input type="text" id="clientName" class="ios-input mt-1" placeholder="Nom complet">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-400 ml-1">TÉLÉPHONE (Case D)</label>
+                    <input type="tel" id="clientPhone" class="ios-input mt-1" placeholder="06 XX XX XX XX">
+                </div>
             </div>
+            <button onclick="goToStep(2)" class="ios-btn mt-2">Détails Produit →</button>
         </div>
 
         <div id="step-2" class="step-container">
-            <h2 class="text-2xl font-bold">Détails</h2>
-            <div class="space-y-4">
-                <select id="input-collection" class="ios-input" onchange="updateRefs()">
-                    <option value="">Choisir la collection</option>
-                    <option value="H">Homme</option>
-                    <option value="F">Femme</option>
-                    <option value="E">Enfant</option>
-                </select>
-                <select id="input-ref" class="ios-input">
-                    <option value="">Choisir la référence</option>
-                </select>
+            <div class="ios-card p-5 space-y-4">
                 <div>
-                    <label class="text-xs font-bold text-gray-500 ml-2">Échéance commande</label>
-                    <input type="date" id="input-deadline" class="ios-input mt-1">
+                    <label class="text-xs font-bold text-gray-400 ml-1">COLLECTION (Case E)</label>
+                    <select id="collection" class="ios-input mt-1">
+                        <option value="HOMME">Homme</option>
+                        <option value="FEMME">Femme</option>
+                        <option value="ENFANT">Enfant</option>
+                    </select>
                 </div>
-                <div class="flex gap-3">
-                    <button onclick="prevStep(1)" class="ios-btn bg-gray-200 !text-gray-700">Retour</button>
-                    <button onclick="nextStep(3)" class="ios-btn">Suivant</button>
+                <div>
+                    <label class="text-xs font-bold text-gray-400 ml-1">TAILLE (Case F)</label>
+                    <select id="size" class="ios-input mt-1">
+                        <option value="S">S</option><option value="M">M</option>
+                        <option value="L">L</option><option value="XL">XL</option>
+                    </select>
                 </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-400 ml-1">COULEUR T-SHIRT (Case G)</label>
+                    <select id="tshirtColor" class="ios-input mt-1" onchange="updateCanvasColor()">
+                        <option value="Blanc">Blanc</option>
+                        <option value="Noir">Noir</option>
+                        <option value="Bleu">Bleu</option>
+                        <option value="Rouge">Rouge</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-400 ml-1">COULEUR LOGO (Case H)</label>
+                    <select id="logoColor" class="ios-input mt-1">
+                        <option value="Noir">Noir</option>
+                        <option value="Blanc">Blanc</option>
+                        <option value="Or">Or</option>
+                        <option value="Argent">Argent</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="goToStep(1)" class="ios-btn bg-gray-200 !text-gray-500">Retour</button>
+                <button onclick="goToStep(3)" class="ios-btn">Design →</button>
             </div>
         </div>
 
         <div id="step-3" class="step-container">
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold">Design</h2>
-                <div class="flex gap-1 bg-gray-200 p-1 rounded-xl">
-                    <button id="tab-front" onclick="switchSide('front')" class="tab-btn active">Avant</button>
-                    <button id="tab-back" onclick="switchSide('back')" class="tab-btn">Arrière</button>
-                </div>
+            <div class="bg-gray-200 p-1 rounded-xl flex mb-2">
+                <button id="tab-av" onclick="switchView('front')" class="tab-btn active">AVANT</button>
+                <button id="tab-ar" onclick="switchView('back')" class="tab-btn">ARRIÈRE</button>
+            </div>
+            
+            <div class="flex justify-center bg-white rounded-2xl p-4 shadow-inner">
+                <canvas id="tshirtCanvas" width="300" height="300"></canvas>
             </div>
 
-            <canvas id="main-canvas" width="350" height="350"></canvas>
-
-            <div class="ios-card p-4 space-y-4">
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase">Couleur T-Shirt</label>
-                    <div class="flex gap-3 mt-2">
-                        <button onclick="changeTshirtColor('#ffffff', 'Blanc')" class="w-8 h-8 rounded-full bg-white border border-gray-300"></button>
-                        <button onclick="changeTshirtColor('#1c1c1e', 'Noir')" class="w-8 h-8 rounded-full bg-black"></button>
-                        <button onclick="changeTshirtColor('#1e3a8a', 'Bleu')" class="w-8 h-8 rounded-full bg-blue-900"></button>
-                        <button onclick="changeTshirtColor('#dc2626', 'Rouge')" class="w-8 h-8 rounded-full bg-red-600"></button>
-                        <button onclick="changeTshirtColor('#166534', 'Vert')" class="w-8 h-8 rounded-full bg-green-800"></button>
+            <div class="ios-card p-4 space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400">LOGO (K/L)</label>
+                        <select id="logoSelect" class="ios-input text-sm" onchange="addLogo(this.value)">
+                            <option value="">Aucun</option>
+                            <option value="AVI-01">AVI-01</option>
+                            <option value="SXM-12">SXM-12</option>
+                            <option value="BEA-16">BEA-16</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400">TEXTE LIBRE (I/J)</label>
+                        <input type="text" id="customText" class="ios-input text-sm" placeholder="Écrire ici..." oninput="addText(this.value)">
                     </div>
                 </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase">Ajouter un Logo</label>
-                    <select id="select-logo" class="ios-input mt-2" onchange="addLogoToCanvas(this.value)">
-                        <option value="">Sélectionner un logo...</option>
-                        <option value="AVI-01">AVI-01</option>
-                        <option value="SXM-12">SXM-12</option>
-                        <option value="BEA-16">BEA-16</option>
-                    </select>
-                </div>
+                <p class="text-[10px] text-center text-gray-400 italic">Pincez/glissez le logo pour ajuster la taille.</p>
             </div>
 
             <div class="flex gap-3">
-                <button onclick="prevStep(2)" class="ios-btn bg-gray-200 !text-gray-700">Retour</button>
-                <button onclick="nextStep(4)" class="ios-btn">Terminer</button>
+                <button onclick="goToStep(2)" class="ios-btn bg-gray-200 !text-gray-500">Retour</button>
+                <button onclick="goToStep(4)" class="ios-btn">Finances →</button>
             </div>
         </div>
 
         <div id="step-4" class="step-container">
-            <h2 class="text-2xl font-bold text-center">Récapitulatif</h2>
-            <div id="final-preview" class="ios-card p-4 space-y-2 text-sm"></div>
-            <button onclick="submitOrder()" id="btn-submit" class="ios-btn bg-green-600">Confirmer l'envoi</button>
-            <button onclick="prevStep(3)" class="text-blue-500 font-semibold text-center w-full mt-2">Modifier</button>
+            <div class="ios-card p-5 space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-400 ml-1">NOTES PARTICULIÈRES (Case M)</label>
+                    <textarea id="note" class="ios-input mt-1 h-20" placeholder="Instructions de marquage..."></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 ml-1">PRIX T-SHIRT (N)</label>
+                        <input type="number" id="price" class="ios-input mt-1" value="25" oninput="calcTotal()">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 ml-1">PERSO (O)</label>
+                        <input type="number" id="customPrice" class="ios-input mt-1" value="0" oninput="calcTotal()">
+                    </div>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-xl flex justify-between items-center">
+                    <span class="font-bold text-blue-600">TOTAL (Case P)</span>
+                    <span id="totalDisplay" class="text-2xl font-black text-blue-600">25 €</span>
+                </div>
+                <div class="flex items-center justify-between p-2">
+                    <span class="font-bold">ACOMPTE PAYÉ ? (Q)</span>
+                    <select id="paid" class="ios-input !w-32">
+                        <option value="NON">Non</option>
+                        <option value="OUI">Oui</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="goToStep(5)" class="ios-btn bg-black">Récapitulatif</button>
         </div>
 
-        <div id="step-5" class="step-container text-center pt-10">
-            <h2 class="text-3xl font-bold">Envoyé ! ✅</h2>
-            <button onclick="location.reload()" class="ios-btn mt-8 bg-black">Nouvelle Commande</button>
+        <div id="step-5" class="step-container">
+            <div id="recap" class="ios-card p-5 text-sm space-y-2">
+                </div>
+            <button onclick="sendData()" id="sendBtn" class="ios-btn bg-green-500 shadow-lg shadow-green-200">🚀 Envoyer au Google Sheets</button>
+            <button onclick="goToStep(4)" class="text-center text-blue-500 font-bold py-2">Modifier les prix</button>
         </div>
 
     </div>
 
     <script>
-        const GOOGLE_URL = 'https://script.google.com/macros/s/AKfycbxXM44btJkr0IrX6bG1Jw07iku9Uq_boToCpfTEWJSlFaE_QL-YDiBflPsCYWz4E8ck/exec';
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXM44btJkr0IrX6bG1Jw07iku9Uq_boToCpfTEWJSlFaE_QL-YDiBflPsCYWz4E8ck/exec";
         
-        let canvas;
-        let currentSide = 'front';
-        let tshirtColor = '#ffffff';
-        let colorName = 'Blanc';
-        let designs = { front: { objects: [] }, back: { objects: [] } };
-        let orderData = {};
+        let canvas, currentView = 'front';
+        let views = { 
+            front: { objects: [], text: '', logo: '' }, 
+            back: { objects: [], text: '', logo: '' } 
+        };
 
-        const tshirtPath = "M 80 20 L 120 20 L 140 0 L 210 0 L 230 20 L 270 20 L 280 60 L 250 80 L 240 70 L 240 280 L 110 280 L 110 70 L 100 80 L 70 60 Z";
-
-        window.onload = function() {
-            canvas = new fabric.Canvas('main-canvas', { backgroundColor: '#ffffff' });
+        window.onload = () => {
+            canvas = new fabric.Canvas('tshirtCanvas');
             renderTshirt();
-            updateProgressBar(1);
         };
 
         function renderTshirt() {
             canvas.clear();
-            const shape = new fabric.Path(tshirtPath, {
-                left: 175, top: 175, fill: tshirtColor, stroke: '#d1d1d6', strokeWidth: 2,
-                selectable: false, evented: false, originX: 'center', originY: 'center', scaleX: 1.2, scaleY: 1.2
+            const path = "M 80 20 L 120 20 L 140 0 L 210 0 L 230 20 L 270 20 L 280 60 L 250 80 L 240 70 L 240 280 L 110 280 L 110 70 L 100 80 L 70 60 Z";
+            const tshirt = new fabric.Path(path, {
+                left: 150, top: 150, originX: 'center', originY: 'center',
+                fill: getHexColor(document.getElementById('tshirtColor').value),
+                stroke: '#ccc', strokeWidth: 2, selectable: false, scaleX: 1.1, scaleY: 1.1
             });
-            canvas.add(shape);
-            designs[currentSide].objects.forEach(obj => canvas.add(obj));
+            canvas.add(tshirt);
+            views[currentView].objects.forEach(obj => canvas.add(obj));
             canvas.renderAll();
         }
 
-        function changeTshirtColor(hex, name) {
-            tshirtColor = hex;
-            colorName = name;
+        function getHexColor(name) {
+            const colors = { 'Blanc': '#ffffff', 'Noir': '#1c1c1e', 'Bleu': '#1e3a8a', 'Rouge': '#dc2626' };
+            return colors[name] || '#ffffff';
+        }
+
+        function updateCanvasColor() { renderTshirt(); }
+
+        function switchView(side) {
+            views[currentView].objects = canvas.getObjects().filter(o => o.selectable);
+            currentView = side;
+            document.getElementById('tab-av').className = side === 'front' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('tab-ar').className = side === 'back' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('logoSelect').value = views[currentView].logo;
+            document.getElementById('customText').value = views[currentView].text;
             renderTshirt();
         }
 
-        function switchSide(side) {
-            designs[currentSide].objects = canvas.getObjects().filter(obj => obj.selectable);
-            currentSide = side;
-            document.getElementById('tab-front').classList.toggle('active', side === 'front');
-            document.getElementById('tab-back').classList.toggle('active', side === 'back');
-            renderTshirt();
+        function addLogo(val) {
+            views[currentView].logo = val;
+            if(!val) return;
+            const t = new fabric.Text(val, { left: 150, top: 100, fontSize: 20, originX: 'center', fill: '#007AFF', fontWeight: 'bold' });
+            canvas.add(t);
+            canvas.setActiveObject(t);
         }
 
-        function addLogoToCanvas(logoName) {
-            if (!logoName) return;
-            const text = new fabric.Text(logoName, {
-                left: 175, top: 120, fontSize: 25, fontFamily: 'Helvetica', fontWeight: 'bold',
-                fill: (tshirtColor === '#1c1c1e' || tshirtColor === '#1e3a8a' ? 'white' : 'black'),
-                originX: 'center', cornerColor: '#007AFF', transparentCorners: false
+        function addText(val) {
+            views[currentView].text = val;
+            // Optionnel : on pourrait l'ajouter au canvas en temps réel ici
+        }
+
+        function calcTotal() {
+            const p = parseFloat(document.getElementById('price').value) || 0;
+            const c = parseFloat(document.getElementById('customPrice').value) || 0;
+            document.getElementById('totalDisplay').innerText = (p + c) + " €";
+        }
+
+        function goToStep(s) {
+            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
+            document.getElementById('step-'+s).classList.add('active');
+            document.getElementById('progress-bar').style.width = (s*20) + '%';
+            document.getElementById('step-count').innerText = s + " / 5";
+            if(s === 5) showRecap();
+        }
+
+        function showRecap() {
+            const data = gatherData();
+            document.getElementById('recap').innerHTML = `
+                <p><b>Dossier :</b> ${data.orderNo}</p>
+                <p><b>Client :</b> ${data.client}</p>
+                <p><b>Taille :</b> ${data.size} (${data.collection})</p>
+                <p><b>Couleur :</b> ${data.tshirtColor}</p>
+                <p><b>Logo :</b> ${data.logoFront || 'Ø'} (AV) / ${data.logoBack || 'Ø'} (AR)</p>
+                <hr>
+                <p class='text-blue-600 font-bold'>TOTAL : ${data.total} € - Payé : ${data.paid}</p>
+            `;
+        }
+
+        function gatherData() {
+            return {
+                orderNo: document.getElementById('orderNo').value,
+                client: document.getElementById('clientName').value,
+                phone: document.getElementById('clientPhone').value,
+                collection: document.getElementById('collection').value,
+                size: document.getElementById('size').value,
+                tshirtColor: document.getElementById('tshirtColor').value,
+                logoColor: document.getElementById('logoColor').value,
+                frontText: views.front.text,
+                backText: views.back.text,
+                logoFront: views.front.logo,
+                logoBack: views.back.logo,
+                note: document.getElementById('note').value,
+                price: document.getElementById('price').value,
+                customPrice: document.getElementById('customPrice').value,
+                total: parseFloat(document.getElementById('price').value) + parseFloat(document.getElementById('customPrice').value),
+                paid: document.getElementById('paid').value,
+                image: canvas.toDataURL()
+            };
+        }
+
+        function sendData() {
+            const btn = document.getElementById('sendBtn');
+            btn.disabled = true; btn.innerText = "⏳ Transmission en cours...";
+            
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(gatherData())
+            }).then(() => {
+                alert("✅ Commande enregistrée !");
+                location.reload();
+            }).catch(() => {
+                alert("❌ Erreur de connexion");
+                btn.disabled = false;
             });
-            canvas.add(text);
-            canvas.setActiveObject(text);
-            document.getElementById('select-logo').value = "";
-        }
-
-        function updateRefs() {
-            const col = document.getElementById('input-collection').value;
-            const refSelect = document.getElementById('input-ref');
-            refSelect.innerHTML = '<option value="">Choisir la référence</option>';
-            if(!col) return;
-            for(let i=1; i<=10; i++) {
-                let val = col + String(i).padStart(3, '0');
-                refSelect.innerHTML += `<option value="${val}">${val}</option>`;
-            }
-        }
-
-        function nextStep(s) {
-            if(s === 2) {
-                orderData.client = document.getElementById('input-client').value;
-                orderData.phone = document.getElementById('input-phone').value;
-                if(!orderData.client || !orderData.phone) return alert("Nom et Téléphone requis");
-            }
-            if(s === 3) {
-                orderData.collection = document.getElementById('input-collection').value;
-                orderData.reference = document.getElementById('input-ref').value;
-                orderData.deadline = document.getElementById('input-deadline').value;
-                if(!orderData.collection || !orderData.reference) return alert("Collection et Référence requises");
-            }
-            if(s === 4) {
-                switchSide('front'); 
-                orderData.image = canvas.toDataURL({ format: 'png', multiplier: 1 });
-                orderData.colorName = colorName;
-                orderData.logoFront = designs.front.objects.map(o => o.text).join(', ') || 'Aucun';
-                orderData.logoBack = designs.back.objects.map(o => o.text).join(', ') || 'Aucun';
-
-                document.getElementById('final-preview').innerHTML = `
-                    <p><b>Client:</b> ${orderData.client}</p>
-                    <p><b>Tel:</b> ${orderData.phone}</p>
-                    <p><b>Ref:</b> ${orderData.reference} (${orderData.collection})</p>
-                    <p><b>Couleur:</b> ${colorName}</p>
-                    <p><b>Logo AV:</b> ${orderData.logoFront}</p>
-                    <p><b>Logo AR:</b> ${orderData.logoBack}</p>
-                `;
-            }
-            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
-            document.getElementById('step-'+s).classList.add('active');
-            updateProgressBar(s);
-            window.scrollTo(0,0);
-        }
-
-        function prevStep(s) {
-            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
-            document.getElementById('step-'+s).classList.add('active');
-            updateProgressBar(s);
-        }
-
-        function updateProgressBar(s) {
-            document.getElementById('progress-bar').style.width = (s / 5 * 100) + '%';
-        }
-
-        function submitOrder() {
-            const btn = document.getElementById('btn-submit');
-            btn.disabled = true;
-            btn.innerText = "Envoi...";
-            fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(orderData) })
-            .then(() => nextStep(5))
-            .catch(() => { alert("Erreur"); btn.disabled = false; });
         }
     </script>
 </body>
