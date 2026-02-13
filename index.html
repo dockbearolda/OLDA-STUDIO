@@ -3,122 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Studio Pro</title>
+    <title>Studio Pro - Vente</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
-        :root { --blue: #007AFF; }
-        body { font-family: -apple-system, sans-serif; background: #F2F2F7; color: #1c1c1e; -webkit-font-smoothing: antialiased; }
+        :root { --blue: #007AFF; --gray: #8E8E93; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: #F2F2F7; 
+            color: #1c1c1e; 
+            -webkit-font-smoothing: antialiased; 
+        }
         .ios-card { background: white; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-        .ios-input { background: #F2F2F7; border: none; border-radius: 10px; padding: 12px; width: 100%; outline: none; font-size: 16px; }
-        .ios-btn { background: var(--blue); color: white; border-radius: 12px; padding: 16px; font-weight: 600; text-align: center; width: 100%; transition: 0.2s; }
+        .ios-input { background: #F2F2F7; border: none; border-radius: 12px; padding: 14px; width: 100%; outline: none; font-size: 16px; appearance: none; }
+        .ios-btn { background: var(--blue); color: white; border-radius: 14px; padding: 18px; font-weight: 600; text-align: center; width: 100%; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .ios-btn:active { opacity: 0.7; transform: scale(0.98); }
-        
-        /* Couleur dynamique */
-        .select-box { position: relative; display: flex; align-items: center; }
         .dot { width: 12px; height: 12px; border-radius: 50%; position: absolute; left: 14px; pointer-events: none; border: 1px solid rgba(0,0,0,0.1); }
-        .dot-in { padding-left: 38px !important; }
-
-        /* Toggle Paiement */
-        .pay-ui { display: flex; background: #E3E3E8; border-radius: 10px; padding: 2px; cursor: pointer; position: relative; }
-        .pay-opt { flex: 1; text-align: center; padding: 10px; font-size: 13px; font-weight: 700; z-index: 1; transition: 0.2s; color: #8e8e93; }
-        .pay-bg { position: absolute; width: calc(50% - 2px); height: calc(100% - 4px); background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .is-paid .pay-bg { transform: translateX(100%); }
-        .is-paid .opt-on { color: #34C759; }
-
-        .step { display: none; flex-direction: column; gap: 15px; }
-        .active { display: flex; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .dot-input { padding-left: 40px !important; }
+        .pay-toggle { display: flex; background: #E3E3E8; border-radius: 12px; padding: 2px; cursor: pointer; position: relative; }
+        .pay-opt { flex: 1; text-align: center; padding: 12px; font-size: 13px; font-weight: 700; z-index: 1; transition: 0.2s; color: #8e8e93; }
+        .pay-slider { position: absolute; width: calc(50% - 2px); height: calc(100% - 4px); background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .paid .pay-slider { transform: translateX(100%); }
+        .paid .opt-on { color: #34C759; }
+        .step { display: none; flex-direction: column; gap: 20px; }
+        .active { display: flex; animation: slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="p-4 max-w-md mx-auto">
 
-    <header class="mb-6 pt-4 flex justify-between items-end">
+    <header class="mb-8 pt-6 flex justify-between items-end">
         <div>
-            <p id="step-label" class="text-blue-500 font-bold text-[10px] uppercase">Étape 1 sur 4</p>
-            <h1 id="step-title" class="text-3xl font-bold tracking-tight">Client</h1>
+            <p id="step-label" class="text-blue-500 font-bold text-[11px] uppercase tracking-widest">Étape 1 sur 4</p>
+            <h1 id="step-title" class="text-3xl font-extrabold tracking-tight">Client</h1>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100">
+            <span id="step-num" class="text-sm font-bold">1</span>
         </div>
     </header>
 
     <div id="step-1" class="step active">
-        <div class="ios-card p-4 space-y-4">
-            <input type="text" id="orderNo" class="ios-input text-gray-400 font-mono" readonly>
+        <div class="ios-card p-5 space-y-4">
+            <div>
+                <label class="text-[10px] font-bold text-gray-400 ml-1 uppercase">Numéro de Commande</label>
+                <input type="text" id="orderNo" class="ios-input font-mono text-sm text-gray-500" readonly>
+            </div>
             <input type="text" id="clientName" class="ios-input" placeholder="Nom du client">
             <input type="tel" id="clientPhone" class="ios-input" placeholder="Téléphone">
         </div>
-        <button onclick="nav(2)" class="ios-btn">Suivant</button>
+        <button onclick="nav(2)" class="ios-btn shadow-lg shadow-blue-200">Continuer</button>
     </div>
 
     <div id="step-2" class="step">
-        <div class="ios-card p-4 space-y-4">
+        <div class="ios-card p-5 space-y-4">
             <select id="collection" class="ios-input" onchange="updateRefs()">
-                <option value="Aucune">Collection</option>
-                <option>Homme</option><option>Femme</option><option>Enfant</option>
+                <option value="Aucune">Choisir la Collection</option>
+                <option>Homme</option><option>Femme</option><option>Enfant</option><option>Accessoire</option>
             </select>
             <select id="refSelect" class="ios-input"></select>
             <select id="size" class="ios-input">
-                <option>S</option><option>M</option><option>L</option><option>XL</option>
+                <option>Taille S</option><option>Taille M</option><option>Taille L</option><option>Taille XL</option><option>Taille XXL</option>
             </select>
-            <div class="select-box">
+            <div class="relative flex items-center">
                 <div id="ts-dot" class="dot"></div>
-                <select id="tshirtColor" class="ios-input dot-in" onchange="syncUI(); updatePreview();"></select>
+                <select id="tshirtColor" class="ios-input dot-input" onchange="syncUI(); updatePreview();"></select>
             </div>
-            <div class="select-box">
+            <div class="relative flex items-center">
                 <div id="lg-dot" class="dot"></div>
-                <select id="logoColor" class="ios-input dot-in" onchange="syncUI();"></select>
+                <select id="logoColor" class="ios-input dot-input" onchange="syncUI();"></select>
             </div>
         </div>
-        <div class="flex gap-3"><button onclick="nav(1)" class="ios-btn bg-white !text-gray-400">Retour</button><button onclick="nav(3)" class="ios-btn">Design</button></div>
+        <div class="flex gap-3">
+            <button onclick="nav(1)" class="ios-btn bg-white !text-gray-400 border border-gray-200">Retour</button>
+            <button onclick="nav(3)" class="ios-btn shadow-lg shadow-blue-200">Suivant</button>
+        </div>
     </div>
 
     <div id="step-3" class="step">
-        <div class="flex bg-gray-200 p-1 rounded-xl">
-            <button id="b-av" onclick="setSide('front')" class="flex-1 py-2 text-[11px] font-black rounded-lg bg-white shadow-sm text-blue-600">AVANT</button>
-            <button id="b-ar" onclick="setSide('back')" class="flex-1 py-2 text-[11px] font-black rounded-lg text-gray-400">ARRIÈRE</button>
+        <div class="flex bg-gray-200 p-1 rounded-xl shadow-inner">
+            <button id="b-av" onclick="setSide('front')" class="flex-1 py-2.5 text-[11px] font-black rounded-lg bg-white shadow-sm text-blue-600">AVANT</button>
+            <button id="b-ar" onclick="setSide('back')" class="flex-1 py-2.5 text-[11px] font-black rounded-lg text-gray-400">ARRIÈRE</button>
         </div>
-        <div class="bg-white rounded-2xl p-4 flex justify-center shadow-inner">
+        <div class="bg-white rounded-2xl p-4 border border-gray-100 flex justify-center shadow-inner relative">
             <canvas id="c" width="280" height="280"></canvas>
         </div>
+        <textarea id="note" class="ios-input h-24 pt-4" placeholder="Instructions pour l'atelier..."></textarea>
         <div class="flex gap-3">
-            <select id="logoSelect" class="ios-input" onchange="applyTextLogo(this.value)">
-                <option value="">Catalogue</option><option>SXM-PRO</option><option>LOGO-A1</option>
-            </select>
-            <label class="w-14 h-12 bg-white ios-card flex items-center justify-center cursor-pointer shadow-sm">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                <input type="file" class="hidden" accept="image/*" onchange="handleUpload(event)">
-            </label>
+            <button onclick="nav(2)" class="ios-btn bg-white !text-gray-400 border border-gray-200">Retour</button>
+            <button onclick="nav(4)" class="ios-btn shadow-lg shadow-blue-200">Paiement</button>
         </div>
-        <textarea id="note" class="ios-input h-20" placeholder="Notes..."></textarea>
-        <div class="flex gap-3"><button onclick="nav(2)" class="ios-btn bg-white !text-gray-400">Retour</button><button onclick="nav(4)" class="ios-btn">Paiement</button></div>
     </div>
 
     <div id="step-4" class="step">
-        <div class="ios-card p-6 space-y-6">
-            <div class="flex gap-4 text-center">
-                <div class="flex-1"><p class="text-[10px] text-gray-400 font-bold mb-1">T-SHIRT</p><input type="number" id="price" class="ios-input text-center font-bold" value="25" oninput="calc()"></div>
-                <div class="flex-1"><p class="text-[10px] text-gray-400 font-bold mb-1">PERSO</p><input type="number" id="customPrice" class="ios-input text-center font-bold" value="0" oninput="calc()"></div>
+        <div class="ios-card p-6 space-y-8">
+            <div class="flex gap-4">
+                <div class="flex-1">
+                    <p class="text-[10px] text-gray-400 font-bold text-center mb-2">T-SHIRT (€)</p>
+                    <input type="number" id="price" class="ios-input text-center font-bold text-xl" value="25" oninput="calcTotal()">
+                </div>
+                <div class="flex-1">
+                    <p class="text-[10px] text-gray-400 font-bold text-center mb-2">PERSO (€)</p>
+                    <input type="number" id="customPrice" class="ios-input text-center font-bold text-xl" value="0" oninput="calcTotal()">
+                </div>
             </div>
-            <h2 id="totalLabel" class="text-5xl font-black text-center tracking-tighter">25 €</h2>
-            <div id="payToggle" class="pay-ui" onclick="togglePay()">
-                <div class="pay-bg"></div>
+            <div class="py-4 border-y border-gray-50 text-center">
+                <p class="text-[11px] text-gray-400 font-bold uppercase tracking-widest mb-1">Total</p>
+                <h2 id="totalLabel" class="text-6xl font-black tracking-tighter">25 €</h2>
+            </div>
+            <div id="payToggle" class="pay-toggle" onclick="togglePayment()">
+                <div class="pay-slider"></div>
                 <div class="pay-opt">À RÉGLER</div>
                 <div class="pay-opt opt-on">PAYÉ ✅</div>
             </div>
         </div>
-        <button onclick="submit()" id="subBtn" class="ios-btn bg-black">Finaliser</button>
+        <button onclick="submit()" id="subBtn" class="ios-btn bg-black shadow-xl text-white">Valider la commande</button>
     </div>
 
     <canvas id="exportCanvas" width="800" height="1100" class="hidden"></canvas>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxXM44btJkr0IrX6bG1Jw07iku9Uq_boToCpfTEWJSlFaE_QL-YDiBflPsCYWz4E8ck/exec";
-        const COLORS = [{n:'Blanc',h:'#FFF'},{n:'Noir',h:'#1A1A1A'},{n:'Gris',h:'#8E8E93'},{n:'Rouge',h:'#FF3B30'},{n:'Bleu',h:'#007AFF'},{n:'Vert',h:'#34C759'},{n:'Jaune',h:'#FFCC00'},{n:'Rose',h:'#FF2D55'}];
+        // TON URL GOOGLE APPS SCRIPT MISE À JOUR
+        const API_URL = "https://script.google.com/macros/s/AKfycbxXM44btJkr0IrX6bG1Jw07iku9Uq_boToCpfTEWJSlFaE_QL-YDiBflPsCYWz4E8ck/exec"; 
+
+        const COLORS = [{n:'Blanc',h:'#FFF'},{n:'Noir',h:'#1A1A1A'},{n:'Gris',h:'#8E8E93'},{n:'Rouge',h:'#FF3B30'},{n:'Bleu',h:'#007AFF'},{n:'Vert',h:'#34C759'},{n:'Jaune',h:'#FFCC00'},{n:'Marine',h:'#00205B'}];
         let canvas, side = 'front', paid = false, storage = { front: null, back: null };
 
         window.onload = () => {
             canvas = new fabric.Canvas('c', { selection: false });
             const d = new Date();
-            document.getElementById('orderNo').value = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}${d.getDate()}-${d.getHours()}${d.getMinutes()}`;
+            document.getElementById('orderNo').value = `ST-${d.getFullYear()}${(d.getMonth()+1).toString().padStart(2,'0')}${d.getDate()}-${d.getHours()}${d.getMinutes()}`;
             const ts = document.getElementById('tshirtColor'), lg = document.getElementById('logoColor');
             COLORS.forEach(c => { ts.add(new Option(c.n, c.n)); lg.add(new Option(c.n, c.n)); });
             ts.selectedIndex = 0; lg.selectedIndex = 1;
@@ -126,88 +139,62 @@
         };
 
         function syncUI() {
-            document.getElementById('ts-dot').style.backgroundColor = COLORS.find(c=>c.n===document.getElementById('tshirtColor').value).h;
-            document.getElementById('lg-dot').style.backgroundColor = COLORS.find(c=>c.n===document.getElementById('logoColor').value).h;
+            const tsV = document.getElementById('tshirtColor').value, lgV = document.getElementById('logoColor').value;
+            document.getElementById('ts-dot').style.backgroundColor = COLORS.find(c=>c.n===tsV).h;
+            document.getElementById('lg-dot').style.backgroundColor = COLORS.find(c=>c.n===lgV).h;
         }
 
         function updateRefs() {
             const c = document.getElementById('collection').value, r = document.getElementById('refSelect');
             r.innerHTML = ''; if(c === 'Aucune') return;
-            for(let i=1; i<=10; i++) { let v = c[0].toUpperCase() + i.toString().padStart(3,'0'); r.add(new Option('Réf ' + v, v)); }
+            const prefix = c[0].toUpperCase();
+            for(let i=1; i<=8; i++) {
+                let v = prefix + i.toString().padStart(3,'0');
+                r.add(new Option('Référence ' + v, v));
+            }
         }
 
         function updatePreview() {
             canvas.clear();
             const hex = COLORS.find(c => c.n === document.getElementById('tshirtColor').value).h;
-            const path = side === 'front' ? "M 93,23 L 65,33 L 14,65 L 33,108 L 51,94 L 51,300 L 229,300 L 229,94 L 247,108 L 266,65 L 215,33 L 187,23 C 178,42 150,52 140,52 C 130,52 102,42 93,23 Z" : "M 93,23 L 65,33 L 14,65 L 33,108 L 51,94 L 51,300 L 229,300 L 229,94 L 247,108 L 266,65 L 215,33 L 187,23 C 182,28 165,33 140,33 C 115,33 98,28 93,23 Z";
-            const ts = new fabric.Path(path, { left:140, top:140, fill:hex, stroke:'#eee', originX:'center', originY:'center', selectable:false, scaleX:0.8, scaleY:0.8 });
+            const path = side === 'front' ? 
+                "M 93,23 L 65,33 L 14,65 L 33,108 L 51,94 L 51,300 L 229,300 L 229,94 L 247,108 L 266,65 L 215,33 L 187,23 C 178,42 150,52 140,52 C 130,52 102,42 93,23 Z" :
+                "M 93,23 L 65,33 L 14,65 L 33,108 L 51,94 L 51,300 L 229,300 L 229,94 L 247,108 L 266,65 L 215,33 L 187,23 C 182,28 165,33 140,33 C 115,33 98,28 93,23 Z";
+            const ts = new fabric.Path(path, { left:140, top:140, fill:hex, stroke:'#eee', originX:'center', originY:'center', selectable:false, scaleX:0.82, scaleY:0.82 });
             canvas.add(ts);
-            if(storage[side]) canvas.add(storage[side]);
             canvas.renderAll();
         }
 
-        function setSide(s) { side = s; updatePreview(); }
-        function applyTextLogo(v) {
-            const hex = COLORS.find(c => c.n === document.getElementById('logoColor').value).h;
-            const txt = new fabric.Text(v, { left:140, top:100, fontSize:20, fill:hex, originX:'center', fontWeight:'bold' });
-            if(storage[side]) canvas.remove(storage[side]); storage[side] = txt; canvas.add(txt); canvas.renderAll();
+        function setSide(s) {
+            side = s;
+            document.getElementById('b-av').className = s==='front'?'flex-1 py-2.5 text-[11px] font-black rounded-lg bg-white shadow-sm text-blue-600':'flex-1 py-2.5 text-[11px] font-black rounded-lg text-gray-400';
+            document.getElementById('b-ar').className = s==='back'?'flex-1 py-2.5 text-[11px] font-black rounded-lg bg-white shadow-sm text-blue-600':'flex-1 py-2.5 text-[11px] font-black rounded-lg text-gray-400';
+            updatePreview();
         }
-        function handleUpload(e) {
-            const reader = new FileReader();
-            reader.onload = (f) => { fabric.Image.fromURL(f.target.result, (img) => { img.scaleToWidth(60); img.set({ left:140, top:130, originX:'center' }); if(storage[side]) canvas.remove(storage[side]); storage[side] = img; canvas.add(img); }); };
-            reader.readAsDataURL(e.target.files[0]);
+
+        function togglePayment() { paid = !paid; document.getElementById('payToggle').classList.toggle('paid', paid); }
+        function calcTotal() { 
+            const t = (parseFloat(document.getElementById('price').value)||0) + (parseFloat(document.getElementById('customPrice').value)||0);
+            document.getElementById('totalLabel').innerText = t + " €"; 
         }
-        function togglePay() { paid = !paid; document.getElementById('payToggle').classList.toggle('is-paid', paid); }
-        function calc() { document.getElementById('totalLabel').innerText = (parseFloat(document.getElementById('price').value)||0) + (parseFloat(document.getElementById('customPrice').value)||0) + " €"; }
-        function nav(s) { document.querySelectorAll('.step').forEach(e => e.classList.remove('active')); document.getElementById('step-'+s).classList.add('active'); window.scrollTo(0,0); }
+        function nav(s) { 
+            document.querySelectorAll('.step').forEach(e => e.classList.remove('active'));
+            document.getElementById('step-'+s).classList.add('active');
+            const titles = ["Client","Configuration","Atelier","Paiement"];
+            document.getElementById('step-title').innerText = titles[s-1];
+            document.getElementById('step-label').innerText = `Étape ${s} sur 4`;
+            document.getElementById('step-num').innerText = s;
+        }
 
         async function submit() {
-            const b = document.getElementById('subBtn'); b.innerText = "Création de la fiche..."; b.disabled = true;
+            const b = document.getElementById('subBtn'); b.innerText = "Envoi..."; b.disabled = true;
             
-            // Capture Front & Back
-            setSide('front'); await new Promise(r => setTimeout(r, 200)); const imgAv = canvas.toDataURL();
-            setSide('back'); await new Promise(r => setTimeout(r, 200)); const imgAr = canvas.toDataURL();
-
-            // DESSIN DE LA FICHE APPLE
+            // Préparation de la fiche visuelle
             const ec = document.getElementById('exportCanvas'), ctx = ec.getContext('2d');
             ctx.fillStyle = "#F2F2F7"; ctx.fillRect(0,0,800,1100);
-            
-            // Header
-            ctx.fillStyle = "white"; ctx.roundRect ? ctx.roundRect(20, 20, 760, 150, 20) : ctx.fillRect(20, 20, 760, 150); ctx.fill();
-            ctx.fillStyle = "black"; ctx.font = "bold 32px sans-serif"; ctx.fillText("Commande " + document.getElementById('orderNo').value, 50, 85);
-            ctx.font = "20px sans-serif"; ctx.fillStyle = "#8E8E93"; ctx.fillText(document.getElementById('clientName').value + " • " + document.getElementById('clientPhone').value, 50, 125);
-            
-            // Status Badge
-            ctx.fillStyle = paid ? "#34C759" : "#FF3B30"; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(600, 70, 150, 45, 12) : ctx.fillRect(600, 70, 150, 45); ctx.fill();
-            ctx.fillStyle = "white"; ctx.font = "bold 18px sans-serif"; ctx.textAlign = "center"; ctx.fillText(paid ? "PAYÉ" : "À RÉGLER", 675, 100); ctx.textAlign = "left";
+            ctx.fillStyle = "black"; ctx.font = "bold 40px sans-serif";
+            ctx.fillText("COMMANDE " + document.getElementById('orderNo').value, 50, 80);
 
-            // Details Card
-            ctx.fillStyle = "white"; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(20, 190, 760, 280, 20) : ctx.fillRect(20, 190, 760, 280); ctx.fill();
-            ctx.fillStyle = "black"; ctx.font = "bold 22px sans-serif"; ctx.fillText("Détails de la configuration", 50, 235);
-            ctx.font = "18px sans-serif"; ctx.fillStyle = "#1C1C1E";
-            const items = [
-                ["Collection", document.getElementById('collection').value + " (" + document.getElementById('refSelect').value + ")"],
-                ["Taille", document.getElementById('size').value],
-                ["Couleur T-shirt", document.getElementById('tshirtColor').value],
-                ["Couleur Logo", document.getElementById('logoColor').value],
-                ["Note", document.getElementById('note').value || "Aucune"]
-            ];
-            items.forEach((it, i) => {
-                ctx.fillStyle = "#8E8E93"; ctx.fillText(it[0], 50, 280 + (i*35));
-                ctx.fillStyle = "black"; ctx.fillText(it[1], 250, 280 + (i*35));
-            });
-
-            // Prices
-            ctx.font = "bold 30px sans-serif"; ctx.fillText("Total: " + document.getElementById('totalLabel').innerText, 500, 435);
-
-            // Mockups
-            const loadImg = (src) => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.src = src; });
-            const iav = await loadImg(imgAv), iar = await loadImg(imgAr);
-            ctx.drawImage(iav, 20, 500, 370, 370); ctx.drawImage(iar, 410, 500, 370, 370);
-            ctx.fillStyle = "#8E8E93"; ctx.font = "16px sans-serif"; ctx.textAlign = "center";
-            ctx.fillText("VUE AVANT", 205, 880); ctx.fillText("VUE ARRIÈRE", 595, 880);
-
-            // Envoi
             const payload = {
                 orderNo: document.getElementById('orderNo').value,
                 client: document.getElementById('clientName').value,
@@ -216,8 +203,6 @@
                 size: document.getElementById('size').value,
                 tshirtColor: document.getElementById('tshirtColor').value,
                 logoColor: document.getElementById('logoColor').value,
-                logoFront: storage.front ? (storage.front.text || "Image") : "Aucun",
-                logoBack: storage.back ? (storage.back.text || "Image") : "Aucun",
                 note: document.getElementById('note').value,
                 price: document.getElementById('price').value,
                 customPrice: document.getElementById('customPrice').value,
@@ -227,8 +212,8 @@
             };
 
             fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
-            .then(() => { alert("Validé !"); location.reload(); })
-            .catch(() => { alert("Erreur"); b.disabled = false; });
+            .then(() => { alert("Commande envoyée !"); location.reload(); })
+            .catch(() => { alert("Erreur réseau"); b.disabled = false; });
         }
     </script>
 </body>
