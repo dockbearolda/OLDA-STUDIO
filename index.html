@@ -11,7 +11,6 @@
         body { font-family: -apple-system, sans-serif; background-color: var(--apple-bg); color: #1d1d1f; -webkit-font-smoothing: antialiased; }
         .ios-card { background: white; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .ios-input { background: #f2f2f7; border: none; border-radius: 12px; padding: 16px; font-size: 17px; width: 100%; outline: none; }
-        .ios-input:focus { background: #e5e5ea; box-shadow: 0 0 0 2px var(--apple-blue); }
         .ios-btn { background: var(--apple-blue); color: white; border-radius: 14px; padding: 18px; font-size: 17px; font-weight: 600; width: 100%; transition: all 0.2s; }
         .ios-btn:active { transform: scale(0.97); opacity: 0.9; }
         .step-container { display: none; flex-direction: column; gap: 20px; animation: fadeIn 0.4s ease forwards; }
@@ -31,7 +30,7 @@
         </div>
     </div>
 
-    <div class="max-w-md mx-auto w-full flex-grow flex flex-col justify-center">
+    <div class="max-w-md mx-auto w-full flex-grow">
 
         <div id="step-1" class="step-container active">
             <h2 class="text-3xl font-bold">Client</h2>
@@ -43,7 +42,7 @@
         </div>
 
         <div id="step-2" class="step-container">
-            <h2 class="text-2xl font-bold">Collection & Réf</h2>
+            <h2 class="text-2xl font-bold">Détails</h2>
             <div class="space-y-4">
                 <select id="input-collection" class="ios-input" onchange="updateRefs()">
                     <option value="">Choisir la collection</option>
@@ -54,8 +53,8 @@
                 <select id="input-ref" class="ios-input">
                     <option value="">Choisir la référence</option>
                 </select>
-                <div class="pt-2">
-                    <label class="text-sm font-semibold text-gray-500 ml-2">Échéance commande</label>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 ml-2">Échéance commande</label>
                     <input type="date" id="input-deadline" class="ios-input mt-1">
                 </div>
                 <div class="flex gap-3">
@@ -66,7 +65,7 @@
         </div>
 
         <div id="step-3" class="step-container">
-            <div class="flex justify-between items-center px-2">
+            <div class="flex justify-between items-center">
                 <h2 class="text-xl font-bold">Design</h2>
                 <div class="flex gap-1 bg-gray-200 p-1 rounded-xl">
                     <button id="tab-front" onclick="switchSide('front')" class="tab-btn active">Avant</button>
@@ -74,19 +73,17 @@
                 </div>
             </div>
 
-            <div id="canvas-wrapper" class="relative">
-                <canvas id="main-canvas" width="350" height="350"></canvas>
-            </div>
+            <canvas id="main-canvas" width="350" height="350"></canvas>
 
             <div class="ios-card p-4 space-y-4">
                 <div>
                     <label class="text-xs font-bold text-gray-400 uppercase">Couleur T-Shirt</label>
                     <div class="flex gap-3 mt-2">
-                        <button onclick="changeTshirtColor('#ffffff')" class="w-8 h-8 rounded-full bg-white border border-gray-300"></button>
-                        <button onclick="changeTshirtColor('#1c1c1e')" class="w-8 h-8 rounded-full bg-black"></button>
-                        <button onclick="changeTshirtColor('#1e3a8a')" class="w-8 h-8 rounded-full bg-blue-900"></button>
-                        <button onclick="changeTshirtColor('#dc2626')" class="w-8 h-8 rounded-full bg-red-600"></button>
-                        <button onclick="changeTshirtColor('#166534')" class="w-8 h-8 rounded-full bg-green-800"></button>
+                        <button onclick="changeTshirtColor('#ffffff', 'Blanc')" class="w-8 h-8 rounded-full bg-white border border-gray-300"></button>
+                        <button onclick="changeTshirtColor('#1c1c1e', 'Noir')" class="w-8 h-8 rounded-full bg-black"></button>
+                        <button onclick="changeTshirtColor('#1e3a8a', 'Bleu')" class="w-8 h-8 rounded-full bg-blue-900"></button>
+                        <button onclick="changeTshirtColor('#dc2626', 'Rouge')" class="w-8 h-8 rounded-full bg-red-600"></button>
+                        <button onclick="changeTshirtColor('#166534', 'Vert')" class="w-8 h-8 rounded-full bg-green-800"></button>
                     </div>
                 </div>
                 <div>
@@ -97,7 +94,6 @@
                         <option value="SXM-12">SXM-12</option>
                         <option value="BEA-16">BEA-16</option>
                     </select>
-                    <p class="text-[10px] text-gray-400 mt-1 italic">Touchez le logo sur le T-shirt pour le redimensionner.</p>
                 </div>
             </div>
 
@@ -108,19 +104,14 @@
         </div>
 
         <div id="step-4" class="step-container">
-            <h2 class="text-2xl font-bold text-center">Prêt à envoyer ?</h2>
-            <div id="final-preview" class="ios-card p-4 space-y-2 text-sm">
-                </div>
-            <button onclick="submitOrder()" id="btn-submit" class="ios-btn bg-green-600 shadow-lg shadow-green-200">Envoyer au Google Sheets</button>
-            <button onclick="prevStep(3)" class="text-blue-500 font-semibold text-center py-2">Modifier le design</button>
+            <h2 class="text-2xl font-bold text-center">Récapitulatif</h2>
+            <div id="final-preview" class="ios-card p-4 space-y-2 text-sm"></div>
+            <button onclick="submitOrder()" id="btn-submit" class="ios-btn bg-green-600">Confirmer l'envoi</button>
+            <button onclick="prevStep(3)" class="text-blue-500 font-semibold text-center w-full mt-2">Modifier</button>
         </div>
 
-        <div id="step-5" class="step-container text-center">
-            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <h2 class="text-3xl font-bold">Commande Validée</h2>
-            <p class="text-gray-500 mt-2">Le Google Sheet a été mis à jour avec le mockup.</p>
+        <div id="step-5" class="step-container text-center pt-10">
+            <h2 class="text-3xl font-bold">Envoyé ! ✅</h2>
             <button onclick="location.reload()" class="ios-btn mt-8 bg-black">Nouvelle Commande</button>
         </div>
 
@@ -132,20 +123,14 @@
         let canvas;
         let currentSide = 'front';
         let tshirtColor = '#ffffff';
-        let designs = {
-            front: { objects: [], image: null },
-            back: { objects: [], image: null }
-        };
+        let colorName = 'Blanc';
+        let designs = { front: { objects: [] }, back: { objects: [] } };
         let orderData = {};
 
-        // SVG HD du T-shirt
         const tshirtPath = "M 80 20 L 120 20 L 140 0 L 210 0 L 230 20 L 270 20 L 280 60 L 250 80 L 240 70 L 240 280 L 110 280 L 110 70 L 100 80 L 70 60 Z";
 
         window.onload = function() {
-            canvas = new fabric.Canvas('main-canvas', {
-                backgroundColor: '#ffffff',
-                preserveObjectStacking: true
-            });
+            canvas = new fabric.Canvas('main-canvas', { backgroundColor: '#ffffff' });
             renderTshirt();
             updateProgressBar(1);
         };
@@ -153,55 +138,34 @@
         function renderTshirt() {
             canvas.clear();
             const shape = new fabric.Path(tshirtPath, {
-                left: 175,
-                top: 175,
-                fill: tshirtColor,
-                stroke: '#d1d1d6',
-                strokeWidth: 2,
-                selectable: false,
-                evented: false,
-                originX: 'center',
-                originY: 'center',
-                scaleX: 1.2,
-                scaleY: 1.2
+                left: 175, top: 175, fill: tshirtColor, stroke: '#d1d1d6', strokeWidth: 2,
+                selectable: false, evented: false, originX: 'center', originY: 'center', scaleX: 1.2, scaleY: 1.2
             });
             canvas.add(shape);
-            canvas.sendToBack(shape);
-            
-            // Recharger les logos du côté actuel
             designs[currentSide].objects.forEach(obj => canvas.add(obj));
             canvas.renderAll();
         }
 
-        function changeTshirtColor(color) {
-            tshirtColor = color;
+        function changeTshirtColor(hex, name) {
+            tshirtColor = hex;
+            colorName = name;
             renderTshirt();
         }
 
         function switchSide(side) {
-            // Sauvegarder les objets du côté actuel (en excluant le t-shirt)
             designs[currentSide].objects = canvas.getObjects().filter(obj => obj.selectable);
-            
             currentSide = side;
             document.getElementById('tab-front').classList.toggle('active', side === 'front');
             document.getElementById('tab-back').classList.toggle('active', side === 'back');
-            
             renderTshirt();
         }
 
         function addLogoToCanvas(logoName) {
             if (!logoName) return;
             const text = new fabric.Text(logoName, {
-                left: 175,
-                top: 120,
-                fontSize: 25,
-                fontFamily: 'Helvetica',
-                fontWeight: 'bold',
-                fill: tshirtColor === '#1c1c1e' ? 'white' : 'black',
-                originX: 'center',
-                cornerColor: '#007AFF',
-                cornerSize: 10,
-                transparentCorners: false
+                left: 175, top: 120, fontSize: 25, fontFamily: 'Helvetica', fontWeight: 'bold',
+                fill: (tshirtColor === '#1c1c1e' || tshirtColor === '#1e3a8a' ? 'white' : 'black'),
+                originX: 'center', cornerColor: '#007AFF', transparentCorners: false
             });
             canvas.add(text);
             canvas.setActiveObject(text);
@@ -223,34 +187,30 @@
             if(s === 2) {
                 orderData.client = document.getElementById('input-client').value;
                 orderData.phone = document.getElementById('input-phone').value;
-                if(!orderData.client || !orderData.phone) return alert("Remplir Client et Téléphone");
+                if(!orderData.client || !orderData.phone) return alert("Nom et Téléphone requis");
             }
             if(s === 3) {
                 orderData.collection = document.getElementById('input-collection').value;
                 orderData.reference = document.getElementById('input-ref').value;
                 orderData.deadline = document.getElementById('input-deadline').value;
-                if(!orderData.collection || !orderData.reference) return alert("Choisir Collection et Référence");
+                if(!orderData.collection || !orderData.reference) return alert("Collection et Référence requises");
             }
             if(s === 4) {
-                // Capturer le mockup final
-                switchSide('front'); // On assure d'être sur le devant pour le sheet
+                switchSide('front'); 
                 orderData.image = canvas.toDataURL({ format: 'png', multiplier: 1 });
-                
-                // Préparer résumé
-                const logAv = designs.front.objects.map(o => o.text).join(', ') || 'Aucun';
-                const logAr = designs.back.objects.map(o => o.text).join(', ') || 'Aucun';
-                orderData.logoFront = logAv;
-                orderData.logoBack = logAr;
-                orderData.couleur = tshirtColor;
+                orderData.colorName = colorName;
+                orderData.logoFront = designs.front.objects.map(o => o.text).join(', ') || 'Aucun';
+                orderData.logoBack = designs.back.objects.map(o => o.text).join(', ') || 'Aucun';
 
                 document.getElementById('final-preview').innerHTML = `
-                    <p><b>Client:</b> ${orderData.client} (${orderData.phone})</p>
-                    <p><b>Réf:</b> ${orderData.reference} - <b>Échéance:</b> ${orderData.deadline}</p>
-                    <p><b>Logos:</b> AV: ${logAv} / AR: ${logAr}</p>
-                    <img src="${orderData.image}" class="mt-2 rounded-lg border">
+                    <p><b>Client:</b> ${orderData.client}</p>
+                    <p><b>Tel:</b> ${orderData.phone}</p>
+                    <p><b>Ref:</b> ${orderData.reference} (${orderData.collection})</p>
+                    <p><b>Couleur:</b> ${colorName}</p>
+                    <p><b>Logo AV:</b> ${orderData.logoFront}</p>
+                    <p><b>Logo AR:</b> ${orderData.logoBack}</p>
                 `;
             }
-
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
             document.getElementById('step-'+s).classList.add('active');
             updateProgressBar(s);
@@ -270,18 +230,10 @@
         function submitOrder() {
             const btn = document.getElementById('btn-submit');
             btn.disabled = true;
-            btn.innerText = "Envoi en cours...";
-
-            fetch(GOOGLE_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(orderData)
-            }).then(() => {
-                nextStep(5);
-            }).catch(e => {
-                alert("Erreur réseau");
-                btn.disabled = false;
-            });
+            btn.innerText = "Envoi...";
+            fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(orderData) })
+            .then(() => nextStep(5))
+            .catch(() => { alert("Erreur"); btn.disabled = false; });
         }
     </script>
 </body>
