@@ -3,198 +3,382 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Studio T-Shirt</title>
+    <title>Studio T-Shirt Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root { --apple-blue: #007AFF; --apple-bg: #F5F5F7; }
-        body { font-family: -apple-system, sans-serif; background-color: var(--apple-bg); -webkit-font-smoothing: antialiased; }
-        .ios-card { background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
-        .ios-input { background: #f2f2f7; border: none; border-radius: 12px; padding: 14px; font-size: 16px; width: 100%; outline: none; }
-        .ios-btn { background: var(--apple-blue); color: white; border-radius: 14px; padding: 16px; font-size: 17px; font-weight: 600; text-align: center; width: 100%; cursor: pointer; }
-        .ios-btn:active { transform: scale(0.97); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--apple-bg); -webkit-font-smoothing: antialiased; }
+        
+        /* Design iOS */
+        .ios-card { background: white; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .ios-input { background: #f2f2f7; border: none; border-radius: 12px; padding: 14px; font-size: 16px; width: 100%; outline: none; transition: background 0.2s; }
+        .ios-input:focus { background: #e5e5ea; box-shadow: 0 0 0 2px rgba(0,122,255,0.2); }
+        .ios-btn { background: var(--apple-blue); color: white; border-radius: 14px; padding: 16px; font-size: 17px; font-weight: 600; text-align: center; width: 100%; cursor: pointer; border: none; }
+        .ios-btn:active { transform: scale(0.98); opacity: 0.9; }
+        
+        /* Animation */
         .step-container { display: none; flex-direction: column; gap: 15px; animation: slideIn 0.3s ease-out; }
         .step-container.active { display: flex; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        .tab-btn { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; color: #8e8e93; }
-        .tab-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); color: var(--apple-blue); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Onglets AV/AR */
+        .tab-btn { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; color: #8e8e93; transition: all 0.2s; }
+        .tab-btn.active { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.15); color: var(--apple-blue); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col p-5">
+<body class="min-h-screen flex flex-col p-5 pb-10">
 
-    <div class="max-w-md mx-auto w-full mb-6">
-        <p id="step-label" class="text-[11px] font-black text-blue-500 uppercase tracking-widest mb-1">Étape 1 sur 4</p>
-        <h1 id="step-title" class="text-2xl font-bold text-gray-900">Nouveau Dossier</h1>
+    <div class="max-w-md mx-auto w-full mb-6 pt-4">
+        <div class="flex justify-between items-end mb-2">
+            <div>
+                <p id="step-label" class="text-[11px] font-black text-blue-500 uppercase tracking-widest mb-1">ÉTAPE 1 / 4</p>
+                <h1 id="step-title" class="text-3xl font-bold text-gray-900 tracking-tight">Client</h1>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm" id="step-badge">1</div>
+        </div>
+        <div class="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div id="progress-bar" class="h-full bg-blue-500 w-1/4 transition-all duration-500 ease-out"></div>
+        </div>
     </div>
 
     <div class="max-w-md mx-auto w-full flex-grow">
 
         <div id="step-1" class="step-container active">
             <div class="ios-card p-5 space-y-4">
-                <input type="text" id="orderNo" class="ios-input" placeholder="N° Commande (Case A)">
-                <input type="text" id="clientName" class="ios-input" placeholder="Nom du Client (Case C)">
-                <input type="tel" id="clientPhone" class="ios-input" placeholder="Téléphone (Case D)">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-gray-400 uppercase ml-1">N° Commande (A)</label>
+                    <input type="text" id="orderNo" class="ios-input" placeholder="Ex: 2024-001">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-gray-400 uppercase ml-1">Client (C)</label>
+                    <input type="text" id="clientName" class="ios-input" placeholder="Nom complet">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-gray-400 uppercase ml-1">Téléphone (D)</label>
+                    <input type="tel" id="clientPhone" class="ios-input" placeholder="06...">
+                </div>
             </div>
-            <button onclick="nav(2)" class="ios-btn">Suivant</button>
+            <button onclick="nav(2)" class="ios-btn mt-2 shadow-lg shadow-blue-200">Continuer</button>
         </div>
 
         <div id="step-2" class="step-container">
             <div class="ios-card p-5 space-y-4">
-                <select id="collection" class="ios-input">
-                    <option value="">Collection (Case E)</option>
-                    <option>Homme</option><option>Femme</option><option>Enfant</option>
-                </select>
-                <select id="size" class="ios-input">
-                    <option value="">Taille (Case F)</option>
-                    <option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
-                </select>
-                <select id="tshirtColor" class="ios-input" onchange="updatePreview()">
-                    <option value="Blanc">Couleur T-shirt : Blanc</option>
-                    <option value="Noir">Couleur T-shirt : Noir</option>
-                    <option value="Bleu">Couleur T-shirt : Bleu</option>
-                    <option value="Rouge">Couleur T-shirt : Rouge</option>
-                </select>
-                <input type="text" id="logoColor" class="ios-input" placeholder="Couleur Logo (Case H)">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-400 uppercase ml-1">Coll. (E)</label>
+                        <select id="collection" class="ios-input">
+                            <option value="Homme">Homme</option>
+                            <option value="Femme">Femme</option>
+                            <option value="Enfant">Enfant</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-400 uppercase ml-1">Taille (F)</label>
+                        <select id="size" class="ios-input">
+                            <option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-gray-400 uppercase ml-1">Couleur T-Shirt (G)</label>
+                    <select id="tshirtColor" class="ios-input" onchange="updatePreview()">
+                        <option value="Blanc">Blanc</option>
+                        <option value="Noir">Noir</option>
+                        <option value="Bleu">Bleu Marine</option>
+                        <option value="Rouge">Rouge</option>
+                        <option value="Vert">Vert</option>
+                        <option value="Gris">Gris Chiné</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-gray-400 uppercase ml-1">Couleur Logo (H)</label>
+                    <input type="text" id="logoColor" class="ios-input" placeholder="Ex: Blanc, Noir, Or...">
+                </div>
             </div>
-            <div class="flex gap-3">
-                <button onclick="nav(1)" class="ios-btn bg-gray-200 !text-gray-500">Retour</button>
-                <button onclick="nav(3)" class="ios-btn">Design</button>
+            <div class="flex gap-3 mt-2">
+                <button onclick="nav(1)" class="ios-btn bg-gray-200 !text-gray-600">Retour</button>
+                <button onclick="nav(3)" class="ios-btn shadow-lg shadow-blue-200">Design</button>
             </div>
         </div>
 
         <div id="step-3" class="step-container">
-            <div class="bg-gray-200 p-1 rounded-xl flex mb-4">
+            <div class="bg-gray-200 p-1 rounded-xl flex mb-2">
                 <button id="btn-av" onclick="setSide('front')" class="tab-btn active">AVANT (I)</button>
                 <button id="btn-ar" onclick="setSide('back')" class="tab-btn">ARRIÈRE (J)</button>
             </div>
             
-            <div class="flex justify-center bg-white rounded-3xl p-4 shadow-inner mb-4">
-                <canvas id="c" width="280" height="280"></canvas>
+            <div class="flex justify-center bg-white rounded-3xl p-2 shadow-inner border border-gray-100 relative overflow-hidden">
+                <canvas id="c" width="300" height="360"></canvas>
             </div>
 
             <div class="ios-card p-4 space-y-3">
-                <select id="logoSelect" class="ios-input" onchange="applyLogo(this.value)">
-                    <option value="">Choisir un Logo...</option>
-                    <option>AVI-01</option><option>SXM-12</option><option>BEA-16</option>
-                </select>
-                <textarea id="note" class="ios-input h-16" placeholder="Notes (Case K)"></textarea>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase px-1">Choisir Logo (I / J)</label>
+                    <select id="logoSelect" class="ios-input" onchange="applyLogo(this.value)">
+                        <option value="">-- Aucun --</option>
+                        <option value="AVI-01">AVI-01</option>
+                        <option value="SXM-12">SXM-12</option>
+                        <option value="BEA-16">BEA-16</option>
+                        <option value="LION-03">LION-03</option>
+                    </select>
+                </div>
+                
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase px-1">Note (K)</label>
+                    <textarea id="note" class="ios-input h-14 text-sm" placeholder="Remarques spéciales..."></textarea>
+                </div>
             </div>
 
             <div class="flex gap-3">
-                <button onclick="nav(2)" class="ios-btn bg-gray-200 !text-gray-500">Retour</button>
-                <button onclick="nav(4)" class="ios-btn">Prix</button>
+                <button onclick="nav(2)" class="ios-btn bg-gray-200 !text-gray-600">Retour</button>
+                <button onclick="nav(4)" class="ios-btn shadow-lg shadow-blue-200">Finances</button>
             </div>
         </div>
 
         <div id="step-4" class="step-container">
-            <div class="ios-card p-5 space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 px-1">PRIX UNITAIRE (L)</label>
-                        <input type="number" id="price" class="ios-input mt-1" value="20" oninput="updateTotal()">
+            <div class="ios-card p-5 space-y-5">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">Prix Unit. (L)</label>
+                        <div class="relative">
+                            <input type="number" id="price" class="ios-input pl-8 font-bold" value="25" oninput="updateTotal()">
+                            <span class="absolute left-3 top-3.5 text-gray-400">€</span>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 px-1">PERSO (M)</label>
-                        <input type="number" id="customPrice" class="ios-input mt-1" value="0" oninput="updateTotal()">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">Perso (M)</label>
+                        <div class="relative">
+                            <input type="number" id="customPrice" class="ios-input pl-8 font-bold" value="0" oninput="updateTotal()">
+                            <span class="absolute left-3 top-3.5 text-gray-400">€</span>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-blue-600 p-5 rounded-2xl text-white flex justify-between items-center">
-                    <span class="font-bold opacity-80">TOTAL (N)</span>
-                    <span id="totalLabel" class="text-3xl font-black">20 €</span>
+
+                <div class="bg-gray-900 p-5 rounded-2xl text-white flex justify-between items-center shadow-xl shadow-gray-300">
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase mb-1">Total à payer (N)</p>
+                        <p id="totalLabel" class="text-4xl font-black tracking-tighter">25 €</p>
+                    </div>
                 </div>
-                <select id="paid" class="ios-input">
-                    <option value="NON">Statut : Non Payé</option>
-                    <option value="OUI">Statut : Payé ✅</option>
-                </select>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase px-1">Statut Paiement (O)</label>
+                    <select id="paid" class="ios-input bg-green-50 text-green-700 font-semibold border border-green-100">
+                        <option value="NON">❌ Non Payé</option>
+                        <option value="OUI">✅ Payé</option>
+                    </select>
+                </div>
             </div>
-            <button onclick="submit()" id="submitBtn" class="ios-btn bg-black !text-white mt-2">Enregistrer la Commande</button>
+
+            <button onclick="submit()" id="submitBtn" class="ios-btn bg-green-500 shadow-lg shadow-green-300 mt-2">Valider la Commande</button>
             <button onclick="nav(3)" class="text-center text-gray-400 text-sm font-medium w-full py-2">Retour au design</button>
         </div>
 
     </div>
 
     <script>
-        const API = "https://script.google.com/macros/s/AKfycbxXM44btJkr0IrX6bG1Jw07iku9Uq_boToCpfTEWJSlFaE_QL-YDiBflPsCYWz4E8ck/exec";
+        // CONFIGURATION GOOGLE SHEETS
+        const API_URL = "https://script.google.com/macros/s/AKfycbxXM44btJkr0IrX6bG1Jw07iku9Uq_boToCpfTEWJSlFaE_QL-YDiBflPsCYWz4E8ck/exec";
         
-        let canvas, side = 'front';
-        let dataStore = { frontLogo: '', backLogo: '' };
-        let objects = { front: [], back: [] };
+        // TRACÉS SVG EXACTS
+        const PATH_FRONT = "M 93,23 L 65,33 L 14,65 L 33,108 L 51,94 L 51,300 L 229,300 L 229,94 L 247,108 L 266,65 L 215,33 L 187,23 C 178,42 150,52 140,52 C 130,52 102,42 93,23 Z";
+        const PATH_BACK = "M 93,23 L 65,33 L 14,65 L 33,108 L 51,94 L 51,300 L 229,300 L 229,94 L 247,108 L 266,65 L 215,33 L 187,23 C 182,28 165,33 140,33 C 115,33 98,28 93,23 Z";
 
-        window.onload = () => {
-            canvas = new fabric.Canvas('c');
-            draw();
+        let canvas;
+        let side = 'front'; // 'front' ou 'back'
+        
+        // Stockage des logos positionnés
+        let objects = { 
+            front: { logoName: '', fabricObj: null }, 
+            back: { logoName: '', fabricObj: null } 
         };
 
-        function draw() {
+        window.onload = () => {
+            canvas = new fabric.Canvas('c', { selection: false });
+            drawTshirt();
+        };
+
+        function drawTshirt() {
+            // Nettoyer sauf les logos
             canvas.clear();
-            const color = document.getElementById('tshirtColor').value;
-            const hex = color === 'Noir' ? '#1c1c1e' : color === 'Bleu' ? '#1e3a8a' : color === 'Rouge' ? '#dc2626' : '#ffffff';
             
-            const shape = new fabric.Path("M 80 20 L 120 20 L 140 0 L 210 0 L 230 20 L 270 20 L 280 60 L 250 80 L 240 70 L 240 280 L 110 280 L 110 70 L 100 80 L 70 60 Z", {
-                left: 140, top: 140, fill: hex, stroke: '#ddd', strokeWidth: 1, originX: 'center', originY: 'center', selectable: false, scaleX: 1, scaleY: 1
+            // 1. Déterminer la couleur
+            const colorName = document.getElementById('tshirtColor').value;
+            let hex = '#ffffff';
+            let stroke = '#e5e7eb';
+            
+            if(colorName === 'Noir') { hex = '#1c1c1e'; stroke = '#333'; }
+            else if(colorName === 'Bleu') { hex = '#1e3a8a'; stroke = '#172554'; }
+            else if(colorName === 'Rouge') { hex = '#dc2626'; stroke = '#991b1b'; }
+            else if(colorName === 'Vert') { hex = '#15803d'; stroke = '#14532d'; }
+            else if(colorName === 'Gris') { hex = '#6b7280'; stroke = '#4b5563'; }
+
+            // 2. Choisir le bon tracé (AV ou AR)
+            const pathString = (side === 'front') ? PATH_FRONT : PATH_BACK;
+
+            // 3. Dessiner le T-Shirt
+            const tshirt = new fabric.Path(pathString, {
+                fill: hex,
+                stroke: stroke,
+                strokeWidth: 1.5,
+                selectable: false,
+                evented: false,
+                originX: 'center',
+                originY: 'center',
+                top: 180,  // Centré verticalement dans le canvas de 360
+                left: 150  // Centré horizontalement dans le canvas de 300
             });
-            canvas.add(shape);
-            objects[side].forEach(obj => canvas.add(obj));
+            
+            canvas.add(tshirt);
+
+            // 4. Ajouter le logo s'il existe pour ce côté
+            const currentLogo = objects[side].fabricObj;
+            if(currentLogo) {
+                canvas.add(currentLogo);
+            }
+            
             canvas.renderAll();
         }
 
         function setSide(s) {
-            objects[side] = canvas.getObjects().filter(o => o.selectable);
+            // Sauvegarder l'état actuel du logo avant de changer
+            // (Fabric gère les objets par référence, donc on s'assure juste qu'il est bien stocké)
+            
             side = s;
+            
+            // UI Update
             document.getElementById('btn-av').className = s === 'front' ? 'tab-btn active' : 'tab-btn';
             document.getElementById('btn-ar').className = s === 'back' ? 'tab-btn active' : 'tab-btn';
-            document.getElementById('logoSelect').value = s === 'front' ? dataStore.frontLogo : dataStore.backLogo;
-            draw();
+            
+            // Restaurer la valeur du selecteur
+            document.getElementById('logoSelect').value = objects[side].logoName;
+            
+            drawTshirt();
         }
 
         function applyLogo(val) {
-            if(side === 'front') dataStore.frontLogo = val; else dataStore.backLogo = val;
-            if(!val) return;
-            const txt = new fabric.Text(val, { left: 140, top: 100, fontSize: 20, originX: 'center', fill: '#007AFF', fontWeight: 'bold' });
+            // Supprimer l'ancien logo du canvas s'il y en a un
+            if (objects[side].fabricObj) {
+                canvas.remove(objects[side].fabricObj);
+                objects[side].fabricObj = null;
+            }
+
+            objects[side].logoName = val;
+
+            if(!val) {
+                canvas.renderAll();
+                return;
+            }
+
+            // Créer le nouveau logo
+            // Contraste auto
+            const colorName = document.getElementById('tshirtColor').value;
+            const textColor = (colorName === 'Noir' || colorName === 'Bleu' || colorName === 'Rouge' || colorName === 'Vert') ? '#FFFFFF' : '#000000';
+
+            const txt = new fabric.Text(val, { 
+                left: 150, 
+                top: 130, 
+                fontSize: 22, 
+                fontFamily: 'Helvetica',
+                fontWeight: 'bold',
+                fill: textColor,
+                originX: 'center',
+                originY: 'center',
+                cornerColor: '#007AFF',
+                cornerStyle: 'circle',
+                transparentCorners: false,
+                cornerSize: 8
+            });
+
+            objects[side].fabricObj = txt;
             canvas.add(txt);
             canvas.setActiveObject(txt);
+            canvas.renderAll();
         }
 
-        function updatePreview() { draw(); }
+        function updatePreview() { 
+            // Si on change la couleur, on redessine tout (et on met à jour la couleur du logo si besoin)
+            const val = objects[side].logoName;
+            drawTshirt();
+            if(val) applyLogo(val); // Réappliquer pour ajuster le contraste blanc/noir
+        }
+
         function updateTotal() {
-            const t = (parseFloat(document.getElementById('price').value)||0) + (parseFloat(document.getElementById('customPrice').value)||0);
-            document.getElementById('totalLabel').innerText = t + " €";
+            const p = parseFloat(document.getElementById('price').value) || 0;
+            const c = parseFloat(document.getElementById('customPrice').value) || 0;
+            document.getElementById('totalLabel').innerText = (p + c) + " €";
         }
 
-        function nav(s) {
+        // Navigation
+        function nav(step) {
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
-            document.getElementById('step-'+s).classList.add('active');
-            document.getElementById('step-label').innerText = `Étape ${s} sur 4`;
-            const titles = ["Client", "Configuration", "Design Visuel", "Financement"];
-            document.getElementById('step-title').innerText = titles[s-1];
+            document.getElementById('step-'+step).classList.add('active');
+            
+            // Mise à jour Header
+            document.getElementById('step-label').innerText = `ÉTAPE ${step} / 4`;
+            document.getElementById('step-badge').innerText = step;
+            document.getElementById('progress-bar').style.width = (step * 25) + '%';
+            
+            const titles = ["Client", "Détails", "Design Visuel", "Financement"];
+            document.getElementById('step-title').innerText = titles[step-1];
+            
             window.scrollTo(0,0);
         }
 
+        // Envoi Google Sheets
         function submit() {
             const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = "⏳ Enregistrement...";
-            
+            btn.disabled = true; 
+            btn.innerHTML = 'Envoi en cours...';
+            btn.classList.add('opacity-75');
+
+            // On capture le mockup (on force la vue avant pour la miniature principale)
+            // Idéalement, on pourrait vouloir capturer les deux, mais pour l'instant on capture l'état actuel du canvas
+            const imgData = canvas.toDataURL({ format: 'png', multiplier: 1 });
+
             const payload = {
-                orderNo: document.getElementById('orderNo').value,
-                client: document.getElementById('clientName').value,
-                phone: document.getElementById('clientPhone').value,
-                collection: document.getElementById('collection').value,
-                size: document.getElementById('size').value,
-                tshirtColor: document.getElementById('tshirtColor').value,
-                logoColor: document.getElementById('logoColor').value,
-                logoFront: dataStore.frontLogo,
-                logoBack: dataStore.backLogo,
-                note: document.getElementById('note').value,
-                price: document.getElementById('price').value,
-                customPrice: document.getElementById('customPrice').value,
-                total: (parseFloat(document.getElementById('price').value)||0) + (parseFloat(document.getElementById('customPrice').value)||0),
-                paid: document.getElementById('paid').value,
-                image: canvas.toDataURL()
+                orderNo: document.getElementById('orderNo').value,     // A
+                client: document.getElementById('clientName').value,   // C
+                phone: document.getElementById('clientPhone').value,   // D
+                collection: document.getElementById('collection').value,// E
+                size: document.getElementById('size').value,           // F
+                tshirtColor: document.getElementById('tshirtColor').value, // G
+                logoColor: document.getElementById('logoColor').value, // H
+                logoFront: objects.front.logoName,                     // I
+                logoBack: objects.back.logoName,                       // J
+                note: document.getElementById('note').value,           // K
+                price: document.getElementById('price').value,         // L
+                customPrice: document.getElementById('customPrice').value, // M
+                total: (parseFloat(document.getElementById('price').value)||0) + (parseFloat(document.getElementById('customPrice').value)||0), // N
+                paid: document.getElementById('paid').value,           // O
+                image: imgData // Sera converti en lien dans P
             };
 
-            fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
-            .then(() => { alert("✅ Commande enregistrée !"); location.reload(); })
-            .catch(() => { alert("❌ Erreur réseau"); btn.disabled = false; });
+            fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                // Success UI
+                document.getElementById('step-4').innerHTML = `
+                    <div class="text-center py-10">
+                        <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">✓</div>
+                        <h2 class="text-2xl font-bold mb-2">Envoyé !</h2>
+                        <p class="text-gray-500 mb-6">La commande a été ajoutée au tableur.</p>
+                        <button onclick="location.reload()" class="ios-btn bg-black text-white">Nouvelle Commande</button>
+                    </div>
+                `;
+                window.scrollTo(0,0);
+            })
+            .catch(err => {
+                alert("Erreur de connexion internet.");
+                btn.disabled = false;
+                btn.innerText = "Réessayer";
+            });
         }
     </script>
 </body>
