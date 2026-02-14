@@ -8,11 +8,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root { --blue: #007AFF; --gray: #8E8E93; --ios-bg: #F2F2F7; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background: var(--ios-bg); 
-            color: #1c1c1e; 
-            -webkit-font-smoothing: antialiased; 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--ios-bg);
+            color: #1c1c1e;
+            -webkit-font-smoothing: antialiased;
         }
         .ios-card { background: white; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .ios-input { background: #F2F2F7; border: none; border-radius: 12px; padding: 14px; width: 100%; outline: none; font-size: 16px; }
@@ -20,7 +20,7 @@
         .ios-btn:active { opacity: 0.7; transform: scale(0.98); }
         .dot { width: 12px; height: 12px; border-radius: 50%; position: absolute; left: 14px; pointer-events: none; border: 1px solid rgba(0,0,0,0.1); }
         .dot-input { padding-left: 40px !important; }
-        
+
         .pay-toggle { display: flex; background: #E3E3E8; border-radius: 12px; padding: 2px; cursor: pointer; position: relative; }
         .pay-opt { flex: 1; text-align: center; padding: 12px; font-size: 13px; font-weight: 700; z-index: 1; transition: 0.2s; color: #8e8e93; }
         .pay-slider { position: absolute; width: calc(50% - 2px); height: calc(100% - 4px); background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.3s; }
@@ -126,8 +126,11 @@
         // URL DE TON SCRIPT GOOGLE
         const API_URL = "https://script.google.com/macros/s/AKfycbyzeU0tD22L8wZ94PW0f4s1a2LH7fNPhK74RtjcIXs0pWAP59anDV8EYtYlP8WX5iCk/exec";
 
-        const COLORS = [{n:'Blanc',h:'#FFF'},{n:'Noir',h:'#1A1A1A'},{n:'Gris',h:'#8E8E93'},{n:'Rouge',h:'#FF3B30'},{n:'Bleu',h:'#007AFF'},{n:'Vert',h:'#34C759'},{n:'Jaune',h:'#FFCC00'},{n:'Marine',h:'#00205B'}];
+        const COLORS = [{n:'Blanc',h:'#FFFFFF'},{n:'Noir',h:'#1A1A1A'},{n:'Gris',h:'#8E8E93'},{n:'Rouge',h:'#FF3B30'},{n:'Bleu',h:'#007AFF'},{n:'Vert',h:'#34C759'},{n:'Jaune',h:'#FFCC00'},{n:'Marine',h:'#00205B'}];
         let canvas, side = 'front', paid = false, storage = { front: null, back: null };
+
+        // Cache des SVG chargés pour éviter de les recharger à chaque fois
+        const svgCache = {};
 
         window.onload = () => {
             canvas = new fabric.Canvas('c', { selection: false });
@@ -153,9 +156,48 @@
         function updatePreview() {
             canvas.clear();
             const hex = COLORS.find(c => c.n === document.getElementById('tshirtColor').value).h;
-            const path = side === 'front' ? "M 93,23 L 65,33 L 14,65 L 33,108 L 51,94 L 51,300 L 229,300 L 229,94 L 247,108 L 266,65 L 215,33 L 187,23 C 178,42 150,52 140,52 C 130,52 102,42 93,23 Z" : "M 93,23 L 65,33 L 14,65 L 33,108 L 51,94 L 51,300 L 229,300 L 229,94 L 247,108 L 266,65 L 215,33 L 187,23 C 182,28 165,33 140,33 C 115,33 98,28 93,23 Z";
-            canvas.add(new fabric.Path(path, { left:140, top:140, fill:hex, stroke:'#ddd', originX:'center', originY:'center', selectable:false, scaleX:0.8, scaleY:0.8 }));
-            canvas.renderAll();
+            const svgUrl = side === 'front' ? 'tshirt-front.svg' : 'tshirt-back.svg';
+            const cacheKey = svgUrl + '_' + hex;
+
+            // Si déjà en cache avec cette couleur, réutiliser
+            if (svgCache[cacheKey]) {
+                const cached = fabric.util.object.clone(svgCache[cacheKey]);
+                canvas.add(cached);
+                canvas.renderAll();
+                return;
+            }
+
+            fabric.loadSVGFromURL(svgUrl, function(objects, options) {
+                if (!objects || objects.length === 0) return;
+
+                // Appliquer la couleur à tous les éléments blancs du SVG
+                objects.forEach(function(obj) {
+                    if (obj.fill && typeof obj.fill === 'string') {
+                        const f = obj.fill.toLowerCase();
+                        // Remplacer les remplissages blancs/quasi-blancs par la couleur choisie
+                        if (f === '#fff' || f === '#ffffff' || f === 'white' || f === 'rgb(100%, 100%, 100%)' || f === 'rgb(255, 255, 255)') {
+                            obj.set('fill', hex);
+                        }
+                    }
+                });
+
+                const group = fabric.util.groupSVGElements(objects, options);
+                // Ajuster la taille au canvas
+                const scale = Math.min(260 / group.width, 260 / group.height);
+                group.set({
+                    left: 140,
+                    top: 140,
+                    scaleX: scale,
+                    scaleY: scale,
+                    originX: 'center',
+                    originY: 'center',
+                    selectable: false
+                });
+
+                svgCache[cacheKey] = group;
+                canvas.add(group);
+                canvas.renderAll();
+            });
         }
 
         function setSide(s) {
@@ -166,9 +208,9 @@
         }
 
         function togglePayment() { paid = !paid; document.getElementById('payToggle').classList.toggle('paid', paid); }
-        function calcTotal() { 
+        function calcTotal() {
             const t = (parseFloat(document.getElementById('price').value)||0) + (parseFloat(document.getElementById('customPrice').value)||0);
-            document.getElementById('totalLabel').innerText = t + " €"; 
+            document.getElementById('totalLabel').innerText = t + " €";
         }
         function nav(s) {
             document.querySelectorAll('.step').forEach(e => e.classList.remove('active'));
@@ -181,7 +223,7 @@
 
         async function submit() {
             const b = document.getElementById('subBtn'); b.innerText = "Envoi en cours..."; b.disabled = true;
-            
+
             const ec = document.getElementById('exportCanvas'), ctx = ec.getContext('2d');
             ctx.fillStyle = "white"; ctx.fillRect(0,0,800,1100);
             ctx.fillStyle = "black"; ctx.font = "bold 40px sans-serif";
