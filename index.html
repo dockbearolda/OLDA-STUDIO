@@ -132,10 +132,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 340px;
+            height: 360px;
             transition: opacity 0.35s ease, transform 0.35s ease;
         }
-        .svg-view svg { max-width: 100%; max-height: 320px; filter: drop-shadow(0 6px 24px rgba(0,0,0,0.08)); }
+        #svgBox { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        #svgBox svg { width: auto; height: 320px; filter: drop-shadow(0 6px 24px rgba(0,0,0,0.08)); }
         .svg-view.fading { opacity: 0; transform: scale(0.97); }
 
         .logo-zone {
@@ -210,8 +211,8 @@
 
         /* ── Responsive Stage ── */
         @media (min-width: 768px) {
-            .svg-view { min-height: 420px; }
-            .svg-view svg { max-height: 400px; }
+            .svg-view { height: 440px; }
+            #svgBox svg { height: 400px; }
         }
 
         /* ── Scrollbar ── */
@@ -484,9 +485,7 @@ function renderSVG() {
     if (el) {
         el.removeAttribute('width');
         el.removeAttribute('height');
-        el.style.width = '100%';
-        el.style.height = 'auto';
-        el.style.maxHeight = '540px';
+        el.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     }
 
     renderLogo();
