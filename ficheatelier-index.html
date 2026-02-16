@@ -247,6 +247,30 @@
 'use strict';
 
 /* ══════════════════════════════════════
+   LOCAL STORAGE — persistence des fiches
+   ══════════════════════════════════════ */
+var STORAGE_KEY = 'olda_fiches';
+
+function getAllFiches() {
+    try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    } catch(e) { return {}; }
+}
+
+function saveFiche(f) {
+    var fiches = getAllFiches();
+    var key = f.commande || ('cmd-' + Date.now());
+    fiches[key] = f;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(fiches));
+}
+
+function deleteFiche(key) {
+    var fiches = getAllFiches();
+    delete fiches[key];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(fiches));
+}
+
+/* ══════════════════════════════════════
    ROUTING — hash present → fiche / else → dashboard
    ══════════════════════════════════════ */
 function route() {
@@ -282,10 +306,29 @@ function showFiche(encoded) {
         return;
     }
 
+    /* Save fiche to localStorage */
+    saveFiche(f);
+
     document.getElementById('dashboardView').style.display = 'none';
     var view = document.getElementById('ficheView');
     view.classList.add('active');
 
+    renderFicheDetail(f);
+}
+
+function showFicheFromStorage(key) {
+    var fiches = getAllFiches();
+    var f = fiches[key];
+    if (!f) return;
+
+    document.getElementById('dashboardView').style.display = 'none';
+    var view = document.getElementById('ficheView');
+    view.classList.add('active');
+
+    renderFicheDetail(f);
+}
+
+function renderFicheDetail(f) {
     /* Header */
     document.getElementById('fCommande').textContent = f.commande || '';
     document.getElementById('fNom').textContent = f.nom || '';
@@ -308,15 +351,15 @@ function showFiche(encoded) {
     document.getElementById('fMockupBack').src = f.mockupBack || '';
 
     /* Details */
-    document.getElementById('fCollection').textContent = f.collection || '—';
-    document.getElementById('fReference').textContent = f.reference || '—';
-    document.getElementById('fTaille').textContent = f.taille || '—';
+    document.getElementById('fCollection').textContent = f.collection || '\u2014';
+    document.getElementById('fReference').textContent = f.reference || '\u2014';
+    document.getElementById('fTaille').textContent = f.taille || '\u2014';
 
     var couleurHtml = '';
     if (f.couleur) {
         couleurHtml = '<span class="color-dot" style="background:' + (f.couleur.hex || '#fff') + '"></span>' + (f.couleur.nom || '');
     }
-    document.getElementById('fCouleur').innerHTML = couleurHtml || '—';
+    document.getElementById('fCouleur').innerHTML = couleurHtml || '\u2014';
 
     document.getElementById('fLogoAvant').textContent = f.logoAvant || 'Aucun';
     document.getElementById('fLogoArriere').textContent = f.logoArriere || 'Aucun';
@@ -362,102 +405,91 @@ function showFiche(encoded) {
 }
 
 /* ══════════════════════════════════════
-   DASHBOARD — existing logic
+   DASHBOARD — reads from localStorage
    ══════════════════════════════════════ */
-const API_URL = "TON_URL_APPS_SCRIPT_ICI";
-
-window.loadOrders = async function() {
+window.loadOrders = function() {
     var loader = document.getElementById('loader');
     loader.style.display = 'block';
 
-    try {
-        var res = await fetch(API_URL);
-        var data = await res.json();
-        var grid = document.getElementById('orderGrid');
-        var empty = document.getElementById('emptyState');
+    var fiches = getAllFiches();
+    var grid = document.getElementById('orderGrid');
+    var empty = document.getElementById('emptyState');
 
-        grid.innerHTML = '';
+    grid.innerHTML = '';
 
-        var activeOrders = data.filter(function(o) { return o.orderNo && o.orderNo !== ''; });
+    var keys = Object.keys(fiches);
 
-        if (activeOrders.length === 0) {
-            empty.classList.remove('hidden'); empty.classList.add('flex');
-        } else {
-            empty.classList.add('hidden'); empty.classList.remove('flex');
-        }
+    if (keys.length === 0) {
+        empty.classList.remove('hidden'); empty.classList.add('flex');
+    } else {
+        empty.classList.add('hidden'); empty.classList.remove('flex');
+    }
 
-        activeOrders.reverse().forEach(function(order) {
-            var card = document.createElement('div');
-            card.className = 'order-card flex flex-col';
-            card.innerHTML =
-                '<div class="p-6 flex justify-between items-start">' +
-                    '<div>' +
-                        '<span class="text-[10px] text-zinc-500 font-black uppercase tracking-widest">' + order.orderNo + '</span>' +
-                        '<h2 class="text-xl font-bold mt-1 text-white">' + order.client + '</h2>' +
-                    '</div>' +
-                    '<span class="badge ' + (order.paid === 'OUI' ? 'badge-paid' : 'badge-unpaid') + '">' +
-                        (order.paid === 'OUI' ? 'PAYE' : 'A REGLER') +
-                    '</span>' +
+    keys.reverse().forEach(function(key) {
+        var f = fiches[key];
+        var statut = (f.paiement && f.paiement.statut) || 'NON';
+        var badgeClass = statut === 'OUI' ? 'badge-paid' : (statut === 'ACOMPTE' ? 'badge-acompte' : 'badge-unpaid');
+        var badgeText = statut === 'OUI' ? 'PAYE' : (statut === 'ACOMPTE' ? 'ACOMPTE' : 'A REGLER');
+        var details = (f.collection || '') + ' · ' + (f.taille || '') + ' · ' + (f.couleur && f.couleur.nom || '');
+
+        var card = document.createElement('div');
+        card.className = 'order-card flex flex-col';
+        card.innerHTML =
+            '<div class="p-6 flex justify-between items-start">' +
+                '<div>' +
+                    '<span class="text-[10px] text-zinc-500 font-black uppercase tracking-widest">' + (f.commande || '') + '</span>' +
+                    '<h2 class="text-xl font-bold mt-1 text-white">' + (f.nom || '') + '</h2>' +
+                    '<p class="text-zinc-500 text-xs mt-1">' + (f.telephone || '') + '</p>' +
                 '</div>' +
-                '<div class="px-4">' +
-                    '<div class="bg-white rounded-xl overflow-hidden shadow-inner">' +
-                        '<img src="' + order.ficheUrl + '" class="w-full h-auto" alt="Fiche">' +
-                    '</div>' +
+                '<div class="text-right">' +
+                    '<span class="badge ' + badgeClass + '">' + badgeText + '</span>' +
+                    '<p class="text-zinc-600 text-xs mt-2">' + (f.date || '') + '</p>' +
                 '</div>' +
-                '<div class="p-6 space-y-4 mt-auto">' +
-                    '<div class="bg-zinc-900/50 rounded-xl p-4 text-sm border border-zinc-800/50">' +
-                        '<p class="text-zinc-400"><strong class="text-zinc-200">Config :</strong> ' + order.details + '</p>' +
-                        '<p class="text-zinc-400 mt-2 italic"><strong class="text-zinc-200">Notes :</strong> ' + (order.note || 'Aucune') + '</p>' +
-                    '</div>' +
-                    '<button onclick="terminerCommande(\'' + order.orderNo + '\')" id="btn-' + order.orderNo + '" class="btn-ready">' +
+            '</div>' +
+            (f.mockupFront ? '<div class="px-4 grid grid-cols-2 gap-1">' +
+                '<div class="bg-zinc-900 rounded-xl overflow-hidden flex justify-center p-3">' +
+                    '<img src="' + f.mockupFront + '" class="h-32 w-auto" alt="Avant">' +
+                '</div>' +
+                '<div class="bg-zinc-900 rounded-xl overflow-hidden flex justify-center p-3">' +
+                    '<img src="' + (f.mockupBack || '') + '" class="h-32 w-auto" alt="Arriere">' +
+                '</div>' +
+            '</div>' : '') +
+            '<div class="p-6 space-y-4 mt-auto">' +
+                '<div class="bg-zinc-900/50 rounded-xl p-4 text-sm border border-zinc-800/50">' +
+                    '<p class="text-zinc-400"><strong class="text-zinc-200">Config :</strong> ' + details + '</p>' +
+                    '<p class="text-zinc-400 mt-1"><strong class="text-zinc-200">Logo :</strong> ' + (f.logoAvant || 'Aucun') + ' / ' + (f.logoArriere || 'Aucun') + '</p>' +
+                    (f.note ? '<p class="text-zinc-400 mt-2 italic"><strong class="text-zinc-200">Notes :</strong> ' + f.note + '</p>' : '') +
+                '</div>' +
+                '<div class="flex gap-2">' +
+                    '<button onclick="voirFiche(\'' + key.replace(/'/g, "\\'") + '\')" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl py-3 font-semibold text-sm cursor-pointer transition-colors">VOIR</button>' +
+                    '<button onclick="terminerCommande(\'' + key.replace(/'/g, "\\'") + '\')" id="btn-' + key + '" class="flex-1 btn-ready">' +
                         '<div class="flex items-center justify-center gap-2">' +
                             '<span>TERMINE</span>' +
                             '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>' +
                         '</div>' +
                     '</button>' +
-                '</div>';
-            grid.appendChild(card);
-        });
-    } catch(err) {
-        console.error('Erreur de chargement:', err);
-    } finally {
-        loader.style.display = 'none';
-    }
+                '</div>' +
+            '</div>';
+        grid.appendChild(card);
+    });
+
+    loader.style.display = 'none';
 };
 
-window.terminerCommande = async function(id) {
-    var btn = document.getElementById('btn-' + id);
-    var originalContent = btn.innerHTML;
+window.voirFiche = function(key) {
+    showFicheFromStorage(key);
+};
 
-    if (!confirm('Confirmer la fin de production ?')) return;
+window.terminerCommande = function(key) {
+    if (!confirm('Confirmer la fin de production pour cette commande ?')) return;
 
-    btn.disabled = true;
-    btn.innerHTML = '<span class="animate-pulse">ARCHIVAGE...</span>';
-
-    try {
-        var response = await fetch(API_URL + '?action=archive&orderNo=' + id);
-        var result = await response.text();
-
-        if (result === 'Archive') {
-            btn.closest('.order-card').style.opacity = '0';
-            btn.closest('.order-card').style.transform = 'scale(0.9)';
-            setTimeout(loadOrders, 500);
-        }
-    } catch(err) {
-        alert('Erreur lors de l\'archivage.');
-        btn.disabled = false;
-        btn.innerHTML = originalContent;
-    }
+    deleteFiche(key);
+    loadOrders();
 };
 
 /* ── Init ── */
 route();
 window.addEventListener('hashchange', route);
-
-/* Auto-refresh dashboard every 2 min */
-setInterval(function() {
-    if (!window.location.hash) loadOrders();
-}, 120000);
 
 })();
 </script>

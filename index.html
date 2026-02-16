@@ -1412,11 +1412,7 @@ window.submit = async function() {
         fiche: ec.toDataURL('image/png')
     };
 
-    try {
-        await fetch(API, {method:'POST', mode:'no-cors', body:JSON.stringify(payload)});
-    } catch(e) { /* Google Sheets — best effort */ }
-
-    /* ── Send fiche to Atelier ── */
+    /* ── Send fiche to Atelier FIRST (before async fetch, to avoid popup blocker) ── */
     const ATELIER_URL = 'https://ficheatelier.pages.dev';
     const ficheData = {
         commande: payload.commande,
@@ -1444,6 +1440,9 @@ window.submit = async function() {
     } catch(e) {
         console.error('Fiche atelier:', e);
     }
+
+    /* ── Send to Google Sheets (best effort, non-blocking) ── */
+    fetch(API, {method:'POST', mode:'no-cors', body:JSON.stringify(payload)}).catch(function(){});
 
     alert('Commande validee !');
     location.reload();
