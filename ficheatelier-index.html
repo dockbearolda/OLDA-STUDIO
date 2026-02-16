@@ -15,11 +15,11 @@
         /* ── Mosaic grid ── */
         .mosaic-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
         }
         @media (min-width: 768px) {
-            .mosaic-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+            .mosaic-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
         }
 
         .mosaic-tile {
@@ -31,11 +31,30 @@
         .mosaic-tile:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.6); border-color: #3a3a3c; }
         .mosaic-tile:active { transform: scale(0.97); }
 
-        .mosaic-thumb {
-            width: 100%; aspect-ratio: 1; object-fit: contain;
-            background: #111; display: block;
+        .mosaic-header { padding: 16px 16px 12px; }
+
+        .mosaic-mockups {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+            background: #2c2c2e;
         }
-        .mosaic-info { padding: 12px 14px; }
+        .mosaic-mockup-side {
+            background: #111; padding: 8px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .mosaic-mockup-side img {
+            width: 100%; height: auto; border-radius: 8px;
+            background: #F5F5F7; object-fit: contain;
+        }
+        .mosaic-mockup-side .side-label {
+            margin-top: 4px; font-size: 9px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px; color: #555;
+        }
+        .mosaic-placeholder {
+            background: #111; aspect-ratio: 2/1;
+            display: flex; align-items: center; justify-content: center; color: #3a3a3c;
+        }
+
+        .mosaic-footer { padding: 10px 16px 14px; }
 
         /* ── Expanded overlay ── */
         .overlay {
@@ -609,20 +628,29 @@ window.loadOrders = function() {
             tile.onclick = function() { ouvrirFiche(key); };
 
             tile.innerHTML =
-                (f.mockupFront
-                    ? '<img class="mosaic-thumb" src="' + f.mockupFront + '" alt="Mockup">'
-                    : '<div class="mosaic-thumb" style="display:flex;align-items:center;justify-content:center;color:#3a3a3c;">' +
-                        '<svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/></svg>' +
-                      '</div>') +
-                '<div class="mosaic-info">' +
-                    '<div class="flex justify-between items-start gap-2">' +
-                        '<div style="min-width:0;">' +
-                            '<p class="text-sm font-bold text-white truncate">' + (f.nom || 'Sans nom') + '</p>' +
-                            '<p class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">' + (f.commande || '') + '</p>' +
-                        '</div>' +
-                        '<span class="badge ' + badgeClass + '" style="flex-shrink:0;">' + badgeText + '</span>' +
+                '<div class="mosaic-header">' +
+                    '<p class="text-lg font-black text-white truncate">' + (f.nom || 'Sans nom') + '</p>' +
+                    '<div class="flex items-center gap-2 mt-1">' +
+                        '<span class="badge ' + badgeClass + '">' + badgeText + '</span>' +
+                        '<span class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">' + (f.commande || '') + '</span>' +
                     '</div>' +
-                    '<p class="text-[11px] text-zinc-600 mt-2 truncate">' + (f.collection || '') + ' · ' + (f.taille || '') + '</p>' +
+                '</div>' +
+                (f.mockupFront
+                    ? '<div class="mosaic-mockups">' +
+                        '<div class="mosaic-mockup-side">' +
+                            '<img src="' + f.mockupFront + '" alt="Avant">' +
+                            '<span class="side-label">Avant</span>' +
+                        '</div>' +
+                        '<div class="mosaic-mockup-side">' +
+                            '<img src="' + (f.mockupBack || '') + '" alt="Arriere">' +
+                            '<span class="side-label">Arriere</span>' +
+                        '</div>' +
+                      '</div>'
+                    : '<div class="mosaic-placeholder">' +
+                        '<svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/></svg>' +
+                      '</div>') +
+                '<div class="mosaic-footer">' +
+                    '<p class="text-[11px] text-zinc-500 truncate">' + (f.collection || '') + ' · ' + (f.taille || '') + ' · ' + (f.couleur && f.couleur.nom || '') + '</p>' +
                 '</div>';
             grid.appendChild(tile);
         });
