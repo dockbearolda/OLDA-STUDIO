@@ -164,6 +164,26 @@
         .btn-ghost { background: white; color: var(--text-2); box-shadow: 0 0 0 0.5px var(--separator); }
         .btn-ghost:hover { background: var(--bg); }
 
+        /* Payment option cards (Apple colored) */
+        .pay-opt {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; padding: 14px 16px; border-radius: var(--radius);
+            background: var(--pay-bg); border: 1.5px solid var(--pay-border);
+            color: var(--pay-color); font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; font-family: inherit; text-align: left;
+        }
+        .pay-opt:active { transform: scale(0.98); opacity: 0.9; }
+        .pay-opt.on { background: var(--pay-bg-on); border-color: var(--pay-border-on); }
+        .pay-opt::after {
+            content: ''; width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+            border: 2px solid var(--pay-border); transition: all 0.2s;
+        }
+        .pay-opt.on::after {
+            border-color: var(--pay-color); background: var(--pay-color);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+            background-size: 12px; background-repeat: no-repeat; background-position: center;
+        }
+
         /* ═══════════════════════════════════
            STEPS
            ═══════════════════════════════════ */
@@ -554,10 +574,10 @@
             <div class="aselect" id="selCollection"></div>
         </div>
 
-        <!-- Reference -->
+        <!-- Reference (auto: annee-date-client) -->
         <div class="card p-5">
             <label class="label ml-1 mb-2 block">Reference</label>
-            <div class="aselect" id="selRef"></div>
+            <div id="refDisplay" style="background:var(--bg);border:1.5px solid transparent;border-radius:var(--radius);padding:14px 16px;font-size:16px;color:var(--text-2);font-weight:500;letter-spacing:-0.022em;font-family:inherit;">&mdash;</div>
         </div>
 
         <!-- Taille -->
@@ -639,11 +659,25 @@
                 <p class="text-[56px] font-black tracking-tighter leading-none" id="totalLabel">25 &euro;</p>
             </div>
             <div>
-                <p class="label mb-2 text-center">Statut du paiement</p>
-                <div class="seg" id="payStatus">
-                    <button class="seg-btn on" data-p="non" onclick="setPay('non')">A regler</button>
-                    <button class="seg-btn" data-p="acompte" onclick="setPay('acompte')">Acompte</button>
-                    <button class="seg-btn" data-p="oui" onclick="setPay('oui')">Paye</button>
+                <p class="label mb-3 text-center">Statut du paiement</p>
+                <div class="space-y-2" id="payStatus">
+                    <button class="pay-opt on" data-p="non" onclick="setPay('non')"
+                        style="--pay-color:#FF3B30;--pay-bg:rgba(255,59,48,0.04);--pay-border:rgba(255,59,48,0.12);--pay-bg-on:rgba(255,59,48,0.08);--pay-border-on:rgba(255,59,48,0.35);">
+                        A regler
+                    </button>
+                    <div>
+                        <button class="pay-opt" data-p="acompte" onclick="setPay('acompte')"
+                            style="--pay-color:#FF9500;--pay-bg:rgba(255,149,0,0.04);--pay-border:rgba(255,149,0,0.12);--pay-bg-on:rgba(255,149,0,0.08);--pay-border-on:rgba(255,149,0,0.35);">
+                            Acompte
+                        </button>
+                        <div id="acompteSection" style="display:none;margin-top:8px;">
+                            <input type="number" id="acompteAmount" class="input" placeholder="Montant de l'acompte" style="font-size:15px;border-color:rgba(255,149,0,0.25);" oninput="calcTotal()">
+                        </div>
+                    </div>
+                    <button class="pay-opt" data-p="oui" onclick="setPay('oui')"
+                        style="--pay-color:#34C759;--pay-bg:rgba(52,199,89,0.04);--pay-border:rgba(52,199,89,0.12);--pay-bg-on:rgba(52,199,89,0.08);--pay-border-on:rgba(52,199,89,0.35);">
+                        Paye
+                    </button>
                 </div>
             </div>
         </div>
@@ -703,14 +737,13 @@ const LOGOS = {
 /* ── State ── */
 let color = COLORS[0];
 let side  = 'front';
-let logoColor = '#1A1A1A';
 let svgF  = null;
 let svgB  = null;
 
-/* Per-side logo state (J: Logo Avant, K: Logo Arriere) */
+/* Per-side logo state (J: Logo Avant, K: Logo Arriere) — logoColor per side */
 const logos = {
-    front: { data: null, x: 50, y: 42, w: 24 },
-    back:  { data: null, x: 50, y: 42, w: 24 }
+    front: { data: null, x: 50, y: 42, w: 24, h: 17, logoColor: '#1A1A1A' },
+    back:  { data: null, x: 50, y: 42, w: 24, h: 17, logoColor: '#1A1A1A' }
 };
 function cl() { return logos[side]; }
 
@@ -891,9 +924,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     createSelect('selCollection',
         [{v:'Homme',l:'Homme'},{v:'Femme',l:'Femme'},{v:'Enfant',l:'Enfant'},{v:'Accessoire',l:'Accessoire'}],
         'Collection',
-        (val) => buildRefs()
+        () => {}
     );
-    createSelect('selRef', [], 'Reference', () => {});
     createSelect('selSize',
         [{v:'S',l:'S'},{v:'M',l:'M'},{v:'L',l:'L'},{v:'XL',l:'XL'},{v:'XXL',l:'XXL'}],
         'Taille',
@@ -928,7 +960,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const cur = cl();
             cur.data = { type: 'atelier', id: found.id, s: found.s };
             showLogoColorSection(true);
-            cur.x = 50; cur.y = 42; cur.w = 24;
+            cur.x = 50; cur.y = 42; cur.w = 24; cur.h = 17;
             document.getElementById('upPill').classList.remove('show');
             document.getElementById('uploadArea').style.display = 'flex';
             document.getElementById('fileIn').value = '';
@@ -940,11 +972,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     createRichSelect('selLogoColor',
         LOGO_COLORS.map(c => ({ v: c.h, l: c.n, html: colorDotHtml(c.h, c.n), trigger: colorDotHtml(c.h, c.n) })),
         'Couleur du logo',
-        (val) => { logoColor = val; renderLogo(); }
+        (val) => { cl().logoColor = val; renderLogo(); }
     );
     selects['selLogoColor'].setValue(LOGO_COLORS[0].h);
 
     initLogoInteraction();
+
+    // Live reference update when client name changes
+    document.getElementById('clientName').addEventListener('input', updateRef);
+    updateRef();
 
     // Close selects on outside click
     document.addEventListener('click', () => closeAllSelects());
@@ -972,22 +1008,27 @@ window.go = function(n) {
     document.getElementById('hLabel').textContent = `Etape ${n} sur 3`;
     document.getElementById('hNum').textContent = n;
     document.getElementById('hBar').style.width = (n/3*100)+'%';
+    if (n === 2) updateRef();
     window.scrollTo({top:0,behavior:'smooth'});
 };
 
 /* ══════════════════════════════════════
-   REFS
+   AUTO REFERENCE (Annee-date-client)
    ══════════════════════════════════════ */
-window.buildRefs = function() {
-    const c = selects['selCollection'] ? selects['selCollection'].value : '';
-    const opts = [];
-    if (c) {
-        for (let i = 1; i <= 5; i++) {
-            opts.push({v: c[0]+'00'+i, l: 'Modele '+c[0]+'00'+i});
-        }
+function updateRef() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const mmdd = String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+    const name = (document.getElementById('clientName').value || '').trim();
+    const el = document.getElementById('refDisplay');
+    if (name) {
+        el.textContent = year + '\u2013' + mmdd + '\u2013' + name;
+        el.style.color = 'var(--text-1)';
+    } else {
+        el.textContent = year + '\u2013' + mmdd + '\u2013...';
+        el.style.color = 'var(--text-2)';
     }
-    updateSelectOptions('selRef', opts, 'Reference');
-};
+}
 
 /* ══════════════════════════════════════
    SVG RENDERING
@@ -1011,7 +1052,7 @@ function renderSVG() {
 }
 
 function applyLogoColor(svgStr) {
-    return svgStr.replace(/#1A1A1A/gi, logoColor);
+    return svgStr.replace(/#1A1A1A/gi, cl().logoColor);
 }
 
 function renderLogo() {
@@ -1045,6 +1086,7 @@ function updateLogoPosition() {
     zone.style.left = cur.x + '%';
     zone.style.top = cur.y + '%';
     zone.style.width = cur.w + '%';
+    zone.style.height = cur.h + '%';
 }
 
 /* ══════════════════════════════════════
@@ -1059,6 +1101,10 @@ function syncLogoUI() {
     } else {
         if (selects['selLogo'] && selects['selLogo'].reset) selects['selLogo'].reset();
         showLogoColorSection(false);
+    }
+    // Restore per-side logo color
+    if (selects['selLogoColor'] && selects['selLogoColor'].setValue) {
+        selects['selLogoColor'].setValue(cur.logoColor || '#1A1A1A');
     }
     // Upload pill
     if (cur.data && cur.data.type === 'custom') {
@@ -1114,6 +1160,7 @@ function onLogoDown(e) {
             startX: e.clientX,
             startY: e.clientY,
             origW: cur.w,
+            origH: cur.h,
             origX: cur.x,
             origY: cur.y,
             stageW: rect.width,
@@ -1163,6 +1210,7 @@ function onLogoMove(e) {
         if (distStart < 1) return;
         const scale = distNow / distStart;
         cur.w = Math.max(8, Math.min(50, dragState.origW * scale));
+        cur.h = Math.max(6, Math.min(40, dragState.origH * scale));
         requestAnimationFrame(updateLogoPosition);
     }
 }
@@ -1219,7 +1267,7 @@ window.onUpload = function(e) {
         document.getElementById('upPill').classList.add('show');
         document.getElementById('uploadArea').style.display = 'none';
         showLogoColorSection(false);
-        cur.x = 50; cur.y = 42; cur.w = 24;
+        cur.x = 50; cur.y = 42; cur.w = 24; cur.h = 17;
         renderLogo();
     };
     r.readAsDataURL(f);
@@ -1238,7 +1286,8 @@ window.rmUpload = function() {
    ══════════════════════════════════════ */
 window.setPay = function(s) {
     payStatus = s;
-    document.querySelectorAll('#payStatus .seg-btn').forEach(b => b.classList.toggle('on', b.dataset.p === s));
+    document.querySelectorAll('#payStatus .pay-opt').forEach(b => b.classList.toggle('on', b.dataset.p === s));
+    document.getElementById('acompteSection').style.display = s === 'acompte' ? 'block' : 'none';
 };
 
 window.calcTotal = function() {
@@ -1267,8 +1316,9 @@ window.submit = async function() {
     ctx.fillText('Logo Arriere: ' + (logos.back.data ? (logos.back.data.type === 'atelier' ? logos.back.data.id : 'Custom') : 'Aucun'), 50, 390);
 
     const collVal = selects['selCollection'] ? selects['selCollection'].value : '';
-    const refVal = selects['selRef'] ? selects['selRef'].value : '';
+    const refVal = document.getElementById('refDisplay').textContent;
     const sizeVal = selects['selSize'] ? selects['selSize'].value : '';
+    const acompteVal = document.getElementById('acompteAmount').value || '';
 
     const payload = {
         commande: document.getElementById('orderNo').textContent,
@@ -1279,7 +1329,8 @@ window.submit = async function() {
         reference: refVal || '',
         taille: sizeVal || '',
         couleurTshirt: color.n,
-        couleurLogo: (logos.front.data && logos.front.data.type === 'atelier') || (logos.back.data && logos.back.data.type === 'atelier') ? logoColor : '',
+        couleurLogoAvant: logos.front.data && logos.front.data.type === 'atelier' ? logos.front.logoColor : '',
+        couleurLogoArriere: logos.back.data && logos.back.data.type === 'atelier' ? logos.back.logoColor : '',
         logoAvant: logos.front.data ? (logos.front.data.type === 'atelier' ? logos.front.data.id : 'Custom') : '',
         logoArriere: logos.back.data ? (logos.back.data.type === 'atelier' ? logos.back.data.id : 'Custom') : '',
         note: document.getElementById('note').value,
@@ -1287,6 +1338,7 @@ window.submit = async function() {
         personnalisation: document.getElementById('customPrice').value,
         total: document.getElementById('totalLabel').textContent,
         paye: payStatus === 'oui' ? 'OUI' : (payStatus === 'acompte' ? 'ACOMPTE' : 'NON'),
+        acompte: acompteVal,
         fiche: ec.toDataURL('image/png')
     };
 
