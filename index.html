@@ -1450,7 +1450,12 @@ window.submit = async function() {
 
     /* ── Build payload ── */
     const collVal = selects['selCollection'] ? selects['selCollection'].value : '';
-    const refVal  = selects['selRef']        ? selects['selRef'].value        : '';
+    /* Référence auto : 26-dd/mm-NomClient (ex: 26-17/02-Martin) */
+    const _rd = new Date();
+    const refVal = String(_rd.getFullYear()).slice(-2) + '-' +
+                   String(_rd.getDate()).padStart(2,'0') + '/' +
+                   String(_rd.getMonth()+1).padStart(2,'0') + '-' +
+                   (document.getElementById('clientName').value||'').trim().replace(/\s+/g,'-');
     const sizeVal = selects['selSize']       ? selects['selSize'].value       : '';
 
     const tel = (document.getElementById('countryCode').value || '') + ' ' +

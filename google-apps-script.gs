@@ -40,9 +40,30 @@ function doPost(e) {
       data.note              || ''   // R  NOTE
     ];
 
-    sheet.appendRow(row);
-
-    var lastRow = sheet.getLastRow();
+    // ── Insertion groupée : place la ligne après la dernière commande du même client ──
+    // La référence (ex: 26-17/02-Martin) est identique pour tous les t-shirts d'un même client.
+    var totalRows = sheet.getLastRow();
+    var lastRow;
+    var grouped = false;
+    if (data.reference && totalRows > 1) {
+      var refs = sheet.getRange(2, 6, totalRows - 1, 1).getValues();
+      for (var i = refs.length - 1; i >= 0; i--) {
+        if (refs[i][0] === data.reference) {
+          var insertAt = i + 3;  // ligne i+2 dans le sheet → insérer avant i+3
+          if (insertAt <= totalRows) {
+            sheet.insertRowBefore(insertAt);
+            sheet.getRange(insertAt, 1, 1, row.length).setValues([row]);
+            lastRow = insertAt;
+            grouped = true;
+          }
+          break;
+        }
+      }
+    }
+    if (!grouped) {
+      sheet.appendRow(row);
+      lastRow = sheet.getLastRow();
+    }
 
     // TÉLÉPHONE — format texte puis setValue garantit la conservation du + et du 0 initial
     var telCell = sheet.getRange(lastRow, 4);
@@ -58,18 +79,10 @@ function doPost(e) {
       rowRange.setBackground('#DCE8FF');  // Bleu pastel
     }
 
-    // Colonne P (col 16) — couleur pastel Apple selon statut paiement
+    // Colonne P (col 16) — police colorée légère (fond = couleur de la ligne)
     var payCell   = sheet.getRange(lastRow, 16);
     var payeUpper = (data.paye || '').toUpperCase();
-    if (payeUpper === 'OUI') {
-      payCell.setBackground('#D9F5E4');  // Vert pastel Apple
-      payCell.setFontColor('#196030');
-      payCell.setFontWeight('bold');
-    } else {
-      payCell.setBackground('#FFE5E3');  // Rouge pastel Apple
-      payCell.setFontColor('#C01010');
-      payCell.setFontWeight('bold');
-    }
+    payCell.setFontColor(payeUpper === 'OUI' ? '#1A7A3C' : '#C0392B');
 
     // Colonne Q (col 17) — lien vers la fiche atelier
     if (data.fiche) {
