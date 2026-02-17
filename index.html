@@ -527,8 +527,14 @@
             </div>
 
             <!-- TEL -->
-            <div class="flex items-center">
+            <div class="flex items-center gap-2">
                 <span class="w-[70px] shrink-0 text-[13px] font-medium text-gray-400 uppercase tracking-wide">TEL</span>
+                <select id="countryCode"
+                        class="shrink-0 bg-gray-100 rounded-lg text-[12px] font-semibold text-gray-600 border-0 outline-none focus:ring-0 cursor-pointer py-1 px-2 appearance-none">
+                    <option value="+590" selected>🇸🇽 +590</option>
+                    <option value="+33">🇫🇷 +33</option>
+                    <option value="+1">🇺🇸 +1</option>
+                </select>
                 <input type="tel" id="clientPhone"
                        class="flex-1 bg-transparent appearance-none rounded-none outline-none border-0 text-[15px] font-semibold text-gray-900 tracking-tight py-1.5 placeholder:text-gray-300 placeholder:font-normal focus:ring-0"
                        placeholder="06 00 00 00 00">
@@ -1376,7 +1382,7 @@ window.submit = async function() {
     ctx.font = '25px sans-serif';
     ctx.fillText('Date: ' + document.getElementById('orderDate').textContent, 50, 150);
     ctx.fillText('Client: ' + document.getElementById('clientName').value, 50, 200);
-    ctx.fillText('Tel: ' + document.getElementById('clientPhone').value, 50, 240);
+    ctx.fillText('Tel: ' + document.getElementById('countryCode').value + ' ' + document.getElementById('clientPhone').value, 50, 240);
     ctx.fillText('Couleur: ' + color.n, 50, 290);
     ctx.fillText('Logo Avant: ' + (logos.front.data ? (logos.front.data.type === 'atelier' ? logos.front.data.id : 'Custom') : 'Aucun'), 50, 340);
     ctx.fillText('Logo Arriere: ' + (logos.back.data ? (logos.back.data.type === 'atelier' ? logos.back.data.id : 'Custom') : 'Aucun'), 50, 390);
@@ -1388,13 +1394,16 @@ window.submit = async function() {
         commande: document.getElementById('orderNo').textContent,
         date: document.getElementById('orderDate').textContent,
         nom: document.getElementById('clientName').value,
-        telephone: document.getElementById('clientPhone').value,
+        telephone: document.getElementById('countryCode').value + ' ' + document.getElementById('clientPhone').value,
         collection: collVal || '',
         reference: refVal || '',
         taille: sizeVal || '',
         couleurTshirt: color.n,
-        couleurLogoAvant: logos.front.data && logos.front.data.type === 'atelier' ? logos.front.logoColor : '',
-        couleurLogoArriere: logos.back.data && logos.back.data.type === 'atelier' ? logos.back.logoColor : '',
+        couleurTshirtHex: color.h,
+        couleurLogoAvant: logos.front.data && logos.front.data.type === 'atelier'
+            ? (LOGO_COLORS.find(c => c.h === logos.front.logoColor) || {n: logos.front.logoColor}).n : '',
+        couleurLogoArriere: logos.back.data && logos.back.data.type === 'atelier'
+            ? (LOGO_COLORS.find(c => c.h === logos.back.logoColor) || {n: logos.back.logoColor}).n : '',
         logoAvant: logos.front.data ? (logos.front.data.type === 'atelier' ? logos.front.data.id : 'Custom') : '',
         logoArriere: logos.back.data ? (logos.back.data.type === 'atelier' ? logos.back.data.id : 'Custom') : '',
         note: document.getElementById('note').value,
@@ -1404,7 +1413,7 @@ window.submit = async function() {
         paye: payStatus === 'oui' ? 'OUI' : 'NON'
     };
 
-    /* ── Send fiche to Atelier FIRST (before async fetch, to avoid popup blocker) ── */
+    /* ── Build fiche URL (sans mockups pour garder l'URL légère) ── */
     const ATELIER_URL = 'https://ficheatelier.pages.dev';
     const ficheData = {
         commande: payload.commande,
@@ -1421,14 +1430,14 @@ window.submit = async function() {
         couleurLogoArriere: payload.couleurLogoArriere,
         note: payload.note,
         prix: { tshirt: payload.prixTshirt, personnalisation: payload.personnalisation, total: payload.total },
-        paiement: { statut: payload.paye },
-        mockupFront: mockupFront,
-        mockupBack: mockupBack
+        paiement: { statut: payload.paye }
     };
 
-    var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(ficheData))));
+    var ficheURL = ATELIER_URL + '#' + btoa(unescape(encodeURIComponent(JSON.stringify(ficheData))));
+    payload.fiche = ficheURL;
+
     if (atelierWin && !atelierWin.closed) {
-        atelierWin.location.href = ATELIER_URL + '#' + encoded;
+        atelierWin.location.href = ficheURL;
     }
 
     /* ── Send to Google Sheets (best effort, non-blocking) ── */
