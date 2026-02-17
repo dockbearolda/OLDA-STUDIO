@@ -1414,8 +1414,7 @@ window.submit = async function() {
         personnalisation: document.getElementById('customPrice').value,
         total: document.getElementById('totalLabel').textContent,
         paye: payStatus === 'oui' ? 'OUI' : (payStatus === 'acompte' ? 'ACOMPTE' : 'NON'),
-        acompte: acompteVal,
-        fiche: ec.toDataURL('image/png')
+        acompte: acompteVal
     };
 
     /* ── Send fiche to Atelier FIRST (before async fetch, to avoid popup blocker) ── */
