@@ -427,9 +427,15 @@ function renderFicheDetail(f) {
         badge.textContent = 'A REGLER'; badge.className = 'badge badge-unpaid';
     }
 
-    /* Mockups */
-    document.getElementById('fMockupFront').src = f.mockupFront || '';
-    document.getElementById('fMockupBack').src = f.mockupBack || '';
+    /* Mockups — masquer si absents (fiche lite depuis Google Sheets) */
+    var mockupSection = document.querySelector('.fiche-mockups');
+    if (f.mockupFront) {
+        mockupSection.style.display = '';
+        document.getElementById('fMockupFront').src = f.mockupFront;
+        document.getElementById('fMockupBack').src = f.mockupBack || '';
+    } else {
+        mockupSection.style.display = 'none';
+    }
 
     /* Details */
     document.getElementById('fCollection').textContent = f.collection || '\u2014';
@@ -442,8 +448,10 @@ function renderFicheDetail(f) {
     }
     document.getElementById('fCouleur').innerHTML = couleurHtml || '\u2014';
 
-    document.getElementById('fLogoAvant').textContent = f.logoAvant || 'Aucun';
-    document.getElementById('fLogoArriere').textContent = f.logoArriere || 'Aucun';
+    document.getElementById('fLogoAvant').textContent =
+        f.logoAvant ? (f.couleurLogoAvant ? f.logoAvant + ' / ' + f.couleurLogoAvant : f.logoAvant) : 'Aucun';
+    document.getElementById('fLogoArriere').textContent =
+        f.logoArriere ? (f.couleurLogoArriere ? f.logoArriere + ' / ' + f.couleurLogoArriere : f.logoArriere) : 'Aucun';
 
     /* Note */
     var noteSection = document.getElementById('fNoteSection');
