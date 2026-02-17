@@ -41,14 +41,14 @@ function doPost(e) {
     ];
 
     // ── Insertion groupée : place la ligne après la dernière commande du même client ──
-    // La référence (ex: 26-17/02-Martin) est identique pour tous les t-shirts d'un même client.
+    // Le N° COMMANDE (ex: 26-0217-Martin) est identique pour tous les t-shirts du même client.
     var totalRows = sheet.getLastRow();
     var lastRow;
     var grouped = false;
-    if (data.reference && totalRows > 1) {
-      var refs = sheet.getRange(2, 6, totalRows - 1, 1).getValues();
-      for (var i = refs.length - 1; i >= 0; i--) {
-        if (refs[i][0] === data.reference) {
+    if (data.commande && totalRows > 1) {
+      var cmdVals = sheet.getRange(2, 1, totalRows - 1, 1).getValues();
+      for (var i = cmdVals.length - 1; i >= 0; i--) {
+        if (cmdVals[i][0] === data.commande) {
           var insertAt = i + 3;  // ligne i+2 dans le sheet → insérer avant i+3
           if (insertAt <= totalRows) {
             sheet.insertRowBefore(insertAt);
