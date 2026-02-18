@@ -663,42 +663,55 @@
          ════════════════════════════════════════ -->
     <div id="s1" class="step active mt-8">
         <div class="bg-white rounded-[32px] px-8 pt-9 pb-8" style="box-shadow:0 2px 16px rgba(0,0,0,0.04);">
+            <div class="flex flex-col gap-6 text-center">
 
-            <!-- ID (auto: jjmmaa-hhmm-Nom-Prenom) -->
-            <div class="flex items-center gap-3 mb-1">
-                <span class="w-[60px] shrink-0 text-[10px] font-black text-gray-300 uppercase tracking-[0.18em]">ID</span>
-                <span class="text-[12px] font-mono font-semibold text-gray-400 tracking-tight select-all" id="orderNo">—</span>
+                <!-- ID — mono, distinct -->
+                <div>
+                    <p class="text-[9px] font-black text-gray-300 uppercase tracking-[0.22em] mb-1">ID</p>
+                    <p class="text-[11px] font-mono font-semibold text-gray-400 select-all" id="orderNo">—</p>
+                </div>
+
+                <!-- DATE -->
+                <div>
+                    <p class="text-[9px] font-black text-gray-300 uppercase tracking-[0.22em] mb-1">DATE</p>
+                    <p class="text-[15px] font-semibold text-gray-900" id="orderDate">15/02/2026</p>
+                </div>
+
+                <div class="h-px bg-gray-100"></div>
+
+                <!-- NOM -->
+                <div>
+                    <p class="text-[9px] font-black text-gray-300 uppercase tracking-[0.22em] mb-1">NOM</p>
+                    <input type="text" id="clientNom"
+                           class="w-full bg-transparent text-center text-[15px] font-semibold text-gray-900 tracking-tight placeholder:text-gray-200 placeholder:font-normal outline-none border-0 focus:ring-0"
+                           placeholder="Dubois" autocomplete="family-name">
+                </div>
+
+                <!-- PRÉNOM -->
+                <div>
+                    <p class="text-[9px] font-black text-gray-300 uppercase tracking-[0.22em] mb-1">PRÉNOM</p>
+                    <input type="text" id="clientPrenom"
+                           class="w-full bg-transparent text-center text-[15px] font-semibold text-gray-900 tracking-tight placeholder:text-gray-200 placeholder:font-normal outline-none border-0 focus:ring-0"
+                           placeholder="Pierre" autocomplete="given-name">
+                </div>
+
+                <!-- TEL -->
+                <div>
+                    <p class="text-[9px] font-black text-gray-300 uppercase tracking-[0.22em] mb-2">TEL</p>
+                    <div class="flex justify-center items-center gap-2">
+                        <select id="countryCode"
+                                class="shrink-0 bg-gray-100 rounded-lg text-[13px] font-semibold text-gray-600 border-0 outline-none focus:ring-0 cursor-pointer py-1.5 px-2 appearance-none">
+                            <option value="+590" selected>+590</option>
+                            <option value="+33">+33</option>
+                            <option value="+1">+1</option>
+                        </select>
+                        <input type="tel" id="clientPhone"
+                               class="bg-transparent text-[15px] font-semibold text-gray-900 tracking-tight placeholder:text-gray-200 placeholder:font-normal outline-none border-0 focus:ring-0"
+                               placeholder="06 00 00 00 00">
+                    </div>
+                </div>
+
             </div>
-
-            <!-- Point median separator -->
-            <div class="py-1.5 pl-[60px]">
-                <span class="text-gray-200 text-[10px]">&bull;</span>
-            </div>
-
-            <!-- DATE -->
-            <div class="flex items-baseline">
-                <span class="w-[60px] shrink-0 text-[10px] font-black text-gray-300 uppercase tracking-[0.18em]">DATE</span>
-                <span class="text-[15px] font-semibold text-gray-900" id="orderDate">15/02/2026</span>
-            </div>
-
-            <!-- Separator -->
-            <div class="mt-6 mb-6 h-px bg-gray-100"></div>
-
-            <!-- NOM -->
-            <div class="flex items-center mb-5">
-                <span class="w-[60px] shrink-0 text-[10px] font-black text-gray-300 uppercase tracking-[0.18em]">NOM</span>
-                <input type="text" id="clientNom"
-                       class="flex-1 bg-transparent appearance-none rounded-none outline-none border-0 text-[17px] font-semibold text-gray-900 tracking-tight py-1 placeholder:text-gray-200 placeholder:font-normal focus:ring-0"
-                       placeholder="Dubois" autocomplete="family-name">
-
-            <!-- PRÉNOM -->
-            <div class="flex items-center">
-                <span class="w-[60px] shrink-0 text-[10px] font-black text-gray-300 uppercase tracking-[0.18em]">PRÉNOM</span>
-                <input type="text" id="clientPrenom"
-                       class="flex-1 bg-transparent appearance-none rounded-none outline-none border-0 text-[17px] font-semibold text-gray-900 tracking-tight py-1 placeholder:text-gray-200 placeholder:font-normal focus:ring-0"
-                       placeholder="Pierre" autocomplete="given-name">
-            </div>
-
         </div>
 
         <!-- Bouton Continuer -->
@@ -1669,6 +1682,9 @@ window.submit = async function() {
     const refVal  = selects['selRef']        ? selects['selRef'].value        : '';
     const sizeVal = selects['selSize']       ? selects['selSize'].value       : '';
 
+    const tel = (document.getElementById('countryCode').value || '') + ' ' +
+                (document.getElementById('clientPhone').value  || '');
+
     const logoColorName = (hex, arr) => (arr.find(c => c.h === hex) || { n: hex }).n;
 
     const payload = {
@@ -1676,6 +1692,7 @@ window.submit = async function() {
         date              : document.getElementById('orderDate').textContent.trim(),
         nom               : (document.getElementById('clientNom').value.trim() + ' ' +
                              document.getElementById('clientPrenom').value.trim()).trim(),
+        telephone         : tel.trim(),
         collection        : collVal || '',
         reference         : refVal  || '',
         taille            : sizeVal || '',
@@ -1704,6 +1721,7 @@ window.submit = async function() {
         commande          : payload.commande,
         date              : payload.date,
         nom               : payload.nom,
+        telephone         : payload.telephone,
         collection        : payload.collection,
         reference         : payload.reference,
         taille            : payload.taille,
