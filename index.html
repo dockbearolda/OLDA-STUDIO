@@ -322,23 +322,23 @@
         }
         .logo-zone.selected .logo-frame { display: block; }
 
-        /* Resize Handles */
+        /* Resize Handles — grossis pour le tactile */
         .logo-handle {
             position: absolute;
-            width: 12px; height: 12px;
+            width: 22px; height: 22px;
             border-radius: 50%;
             background: white;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.22), 0 0 0 0.5px rgba(0,122,255,0.4);
-            border: 1.5px solid var(--accent);
+            box-shadow: 0 1px 6px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,122,255,0.4);
+            border: 2px solid var(--accent);
             z-index: 11;
             display: none;
             touch-action: none;
         }
         .logo-zone.selected .logo-handle { display: block; }
-        .logo-handle.nw { top: -12px; left: -12px; cursor: nwse-resize; }
-        .logo-handle.ne { top: -12px; right: -12px; cursor: nesw-resize; }
-        .logo-handle.sw { bottom: -12px; left: -12px; cursor: nesw-resize; }
-        .logo-handle.se { bottom: -12px; right: -12px; cursor: nwse-resize; }
+        .logo-handle.nw { top: -11px; left: -11px; cursor: nwse-resize; }
+        .logo-handle.ne { top: -11px; right: -11px; cursor: nesw-resize; }
+        .logo-handle.sw { bottom: -11px; left: -11px; cursor: nesw-resize; }
+        .logo-handle.se { bottom: -11px; right: -11px; cursor: nwse-resize; }
 
         /* ═══════════════════════════════════
            COLOR SWATCHES (iPhone Style)
@@ -1318,12 +1318,54 @@ function syncLogoUI() {
 /* ══════════════════════════════════════
    LOGO INTERACTION — 2 zones indépendantes
    ══════════════════════════════════════ */
+/* Pinch state (2 doigts sur le logo) */
+let pinchState = null;
+
 function initLogoInteraction() {
     ['front', 'back'].forEach(s => {
         const zoneId = s === 'front' ? 'logoZoneFront' : 'logoZoneBack';
+        const viewId = s === 'front' ? 'svgViewFront'  : 'svgViewBack';
         const zone   = document.getElementById(zoneId);
-        if (!zone) return;
+        const view   = document.getElementById(viewId);
+        if (!zone || !view) return;
+
         zone.addEventListener('pointerdown', e => onLogoDown(e, s));
+
+        /* ── Pinch-to-zoom sur toute la zone SVG (2 doigts = resize diagonal) ── */
+        view.addEventListener('touchstart', e => {
+            if (e.touches.length === 2 && logos[s].data) {
+                e.preventDefault();
+                if (side !== s) flipSide(s);
+                const d = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                pinchState = { side: s, startDist: d, origW: logos[s].w, origH: logos[s].h };
+            }
+        }, { passive: false });
+
+        view.addEventListener('touchmove', e => {
+            if (!pinchState || pinchState.side !== s || e.touches.length < 2) return;
+            e.preventDefault();
+            const d = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const scale = d / pinchState.startDist;
+            const ratio = pinchState.origH / pinchState.origW;
+            let newW = pinchState.origW * scale;
+            let newH = newW * ratio;
+            /* Contraindre en gardant le ratio */
+            if (newW < 8)  { newW = 8;  newH = newW * ratio; }
+            if (newW > 50) { newW = 50; newH = newW * ratio; }
+            if (newH < 6)  { newH = 6;  newW = newH / ratio; }
+            if (newH > 40) { newH = 40; newW = newH / ratio; }
+            logos[s].w = newW;
+            logos[s].h = newH;
+            updateLogoPositionForSide(s);
+        }, { passive: false });
+
+        view.addEventListener('touchend', () => { pinchState = null; });
     });
 
     document.addEventListener('pointermove', onLogoMove);
@@ -1414,7 +1456,7 @@ function onLogoMove(e) {
     }
 
     if (dragState.type === 'resize') {
-        /* Apple-style : coin direct, linéaire, pas de ratio de distance */
+        /* Apple-style : coin direct, linéaire, ratio toujours conservé */
         const dx = e.clientX - dragState.startX;
         const dy = e.clientY - dragState.startY;
         const signX = dragState.corner.includes('e') ? 1 : -1;
@@ -1422,8 +1464,13 @@ function onLogoMove(e) {
         const delta  = (signX * dx + signY * dy) * 0.5;
         const pctChg = (delta / dragState.stageW) * 100 * 2.5;
         const ratio  = dragState.origH / dragState.origW;
-        cur.w = Math.max(8,  Math.min(50, dragState.origW + pctChg));
-        cur.h = Math.max(6,  Math.min(40, cur.w * ratio));
+        let nw = dragState.origW + pctChg;
+        let nh = nw * ratio;
+        if (nw < 8)  { nw = 8;  nh = nw * ratio; }
+        if (nw > 50) { nw = 50; nh = nw * ratio; }
+        if (nh < 6)  { nh = 6;  nw = nh / ratio; }
+        if (nh > 40) { nh = 40; nw = nh / ratio; }
+        cur.w = nw; cur.h = nh;
         requestAnimationFrame(() => updateLogoPositionForSide(s));
     }
 }
