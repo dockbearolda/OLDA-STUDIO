@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OLDA — Réinventé.</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        apple: {
+          black: '#1d1d1f',
+          gray: '#86868b',
+          light: '#f5f5f7',
+          blue: '#0066cc',
+          bluehover: '#0077ed',
+        }
+      },
+      fontFamily: {
+        sf: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'sans-serif'],
+      },
+      borderRadius: {
+        'bento': '28px',
+      }
+    }
+  }
+}
+</script>
+<style>
+  /* ══════════════════════════════
+     GLOBAL RESET & BASE
+     ══════════════════════════════ */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', 'Roboto', sans-serif; background: #000; color: #f5f5f7; overflow-x: hidden; }
+  ::selection { background: rgba(0, 102, 204, 0.3); }
+
+  /* ══════════════════════════════
+     GLASSMORPHISM NAVBAR
+     ══════════════════════════════ */
+  .nav-glass {
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    background: rgba(29, 29, 31, 0.72);
+    border-bottom: 0.5px solid rgba(255,255,255,0.08);
+    transition: background 0.36s ease;
+  }
+  .nav-glass.at-top {
+    background: transparent;
+    border-bottom-color: transparent;
+  }
+
+  /* ══════════════════════════════
+     TYPOGRAPHY — SF Pro feel
+     ══════════════════════════════ */
+  .headline-hero {
+    font-size: clamp(3.5rem, 10vw, 7rem);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1.04;
+  }
+  .headline-section {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 600;
+    letter-spacing: -0.032em;
+    line-height: 1.08;
+  }
+  .headline-bento {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    line-height: 1.15;
+  }
+  .subhead {
+    font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    color: #86868b;
+  }
+
+  /* ══════════════════════════════
+     PILL BUTTON
+     ══════════════════════════════ */
+  .btn-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 28px;
+    border-radius: 980px;
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    cursor: pointer;
+    border: none;
+  }
+  .btn-pill-blue {
+    background: #0066cc;
+    color: #fff;
+  }
+  .btn-pill-blue:hover {
+    background: #0077ed;
+    transform: scale(1.02);
+  }
+  .btn-pill-dark {
+    background: rgba(255,255,255,0.08);
+    color: #f5f5f7;
+    border: 1px solid rgba(255,255,255,0.16);
+  }
+  .btn-pill-dark:hover {
+    background: rgba(255,255,255,0.14);
+    transform: scale(1.02);
+  }
+  .btn-pill-white {
+    background: #1d1d1f;
+    color: #f5f5f7;
+  }
+  .btn-pill-white:hover {
+    background: #333336;
+    transform: scale(1.02);
+  }
+
+  /* ══════════════════════════════
+     APPLE LINK ARROWS
+     ══════════════════════════════ */
+  .link-blue {
+    color: #0066cc;
+    font-size: 21px;
+    font-weight: 400;
+    text-decoration: none;
+    transition: color 0.2s;
+    cursor: pointer;
+  }
+  .link-blue:hover { color: #0077ed; }
+  .link-blue::after {
+    content: ' >';
+    font-family: system-ui;
+    font-weight: 300;
+  }
+
+  /* ══════════════════════════════
+     SCROLL REVEAL
+     ══════════════════════════════ */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.9s cubic-bezier(0.25, 0.1, 0.25, 1),
+                transform 0.9s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.12s; }
+  .reveal-delay-2 { transition-delay: 0.24s; }
+  .reveal-delay-3 { transition-delay: 0.36s; }
+  .reveal-delay-4 { transition-delay: 0.48s; }
+
+  /* ══════════════════════════════
+     BENTO GRID
+     ══════════════════════════════ */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto auto;
+    gap: 16px;
+  }
+  .bento-card {
+    border-radius: 28px;
+    padding: 40px 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    position: relative;
+    overflow: hidden;
+    min-height: 320px;
+    transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  .bento-card:hover { transform: scale(1.012); }
+
+  .bento-wide   { grid-column: span 2; }
+  .bento-tall   { grid-row: span 2; min-height: 660px; }
+
+  /* Bento backgrounds */
+  .bento-dark   { background: #161617; }
+  .bento-darker { background: #111112; }
+  .bento-accent { background: linear-gradient(145deg, #1a1a2e 0%, #0d0d12 100%); }
+  .bento-blue   { background: linear-gradient(145deg, #001d3d 0%, #000814 100%); }
+  .bento-warm   { background: linear-gradient(145deg, #2d1b00 0%, #0f0a02 100%); }
+
+  .bento-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+
+  /* ══════════════════════════════
+     PRODUCT SHOWCASE
+     ══════════════════════════════ */
+  .product-image-zone {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .product-image-zone::before {
+    content: '';
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(0,102,204,0.15) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* ══════════════════════════════
+     FLOATING ORB (hero background)
+     ══════════════════════════════ */
+  .hero-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    animation: float 8s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-30px) scale(1.05); }
+  }
+  .orb-1 {
+    width: 500px; height: 500px;
+    background: rgba(0,102,204,0.08);
+    top: -150px; right: -100px;
+    animation-delay: 0s;
+  }
+  .orb-2 {
+    width: 400px; height: 400px;
+    background: rgba(94,92,230,0.06);
+    bottom: -100px; left: -80px;
+    animation-delay: -3s;
+  }
+
+  /* ══════════════════════════════
+     DIVIDER LINE
+     ══════════════════════════════ */
+  .apple-divider {
+    height: 0.5px;
+    background: rgba(255,255,255,0.08);
+  }
+
+  /* ══════════════════════════════
+     RESPONSIVE BENTO
+     ══════════════════════════════ */
+  @media (max-width: 1024px) {
+    .bento-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .bento-tall { grid-row: span 1; min-height: 340px; }
+  }
+  @media (max-width: 640px) {
+    .bento-grid {
+      grid-template-columns: 1fr;
+    }
+    .bento-wide { grid-column: span 1; }
+    .bento-card { min-height: 280px; padding: 32px 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     NAVIGATION — Glassmorphism
+     ═══════════════════════════════════ -->
+<nav id="navbar" class="nav-glass at-top fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-[1200px] mx-auto px-6 h-12 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="#" class="text-[#f5f5f7] text-[15px] font-semibold tracking-tight no-underline">
+      <span style="letter-spacing:-0.04em; font-size:18px;">OLDA</span>
+    </a>
+    <!-- Nav links -->
+    <div class="hidden md:flex items-center gap-8">
+      <a href="#produit" class="text-[#86868b] text-[12px] tracking-wide hover:text-[#f5f5f7] transition-colors no-underline">Produit</a>
+      <a href="#fonctionnalites" class="text-[#86868b] text-[12px] tracking-wide hover:text-[#f5f5f7] transition-colors no-underline">Fonctionnalités</a>
+      <a href="#commencer" class="text-[#86868b] text-[12px] tracking-wide hover:text-[#f5f5f7] transition-colors no-underline">Commencer</a>
+    </div>
+    <!-- CTA -->
+    <a href="#commencer" class="btn-pill btn-pill-blue !py-[6px] !px-[18px] !text-[13px]">Essayer</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════
+     HERO SECTION
+     ═══════════════════════════════════ -->
+<section class="relative min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+  <!-- Background orbs -->
+  <div class="hero-orb orb-1"></div>
+  <div class="hero-orb orb-2"></div>
+
+  <div class="relative z-10 max-w-[900px]">
+    <h1 class="headline-hero text-[#f5f5f7] reveal">
+      Simplement<br>magique.
+    </h1>
+    <p class="subhead mt-6 max-w-[600px] mx-auto reveal reveal-delay-1">
+      La gestion de commandes, réinventée avec une élégance radicale et une fluidité sans compromis.
+    </p>
+    <div class="flex items-center justify-center gap-5 mt-10 flex-wrap reveal reveal-delay-2">
+      <a href="#commencer" class="link-blue">Découvrir</a>
+      <a href="#produit" class="link-blue">Regarder le film</a>
+    </div>
+  </div>
+
+  <!-- Scroll indicator -->
+  <div class="absolute bottom-10 reveal reveal-delay-3">
+    <div class="w-[1px] h-10 bg-gradient-to-b from-transparent via-[#86868b] to-transparent mx-auto animate-pulse"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     PRODUCT FOCUS SECTION
+     ═══════════════════════════════════ -->
+<section id="produit" class="py-32 px-6">
+  <div class="max-w-[1080px] mx-auto">
+    <div class="text-center mb-16">
+      <p class="text-apple-blue text-sm font-medium tracking-wide uppercase mb-3 reveal">Nouveau</p>
+      <h2 class="headline-section text-[#f5f5f7] reveal reveal-delay-1">
+        Conçu pour<br>aller à l'essentiel.
+      </h2>
+      <p class="subhead mt-5 max-w-[550px] mx-auto reveal reveal-delay-2">
+        Une interface qui disparaît pour ne laisser que votre travail. Pas de friction, juste du flow.
+      </p>
+    </div>
+
+    <!-- Product Image placeholder -->
+    <div class="product-image-zone reveal reveal-delay-2">
+      <div class="relative z-10 text-center">
+        <div class="text-6xl mb-4" style="filter: drop-shadow(0 0 40px rgba(0,102,204,0.3));">
+          <!-- Minimal device outline -->
+          <svg width="220" height="160" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="8" width="200" height="130" rx="12" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+            <rect x="26" y="22" width="168" height="100" rx="4" fill="rgba(255,255,255,0.04)"/>
+            <!-- Screen content lines -->
+            <rect x="36" y="34" width="60" height="4" rx="2" fill="rgba(0,102,204,0.5)"/>
+            <rect x="36" y="46" width="90" height="3" rx="1.5" fill="rgba(255,255,255,0.08)"/>
+            <rect x="36" y="56" width="75" height="3" rx="1.5" fill="rgba(255,255,255,0.06)"/>
+            <rect x="36" y="66" width="80" height="3" rx="1.5" fill="rgba(255,255,255,0.06)"/>
+            <rect x="36" y="80" width="50" height="18" rx="9" fill="rgba(0,102,204,0.3)"/>
+            <!-- Base -->
+            <path d="M70 138 L150 138 L160 152 L60 152 Z" fill="rgba(255,255,255,0.06)"/>
+            <rect x="55" y="152" width="110" height="3" rx="1.5" fill="rgba(255,255,255,0.08)"/>
+          </svg>
+        </div>
+        <p class="text-[#86868b] text-sm tracking-wide">Interface OLDA — Mode sombre</p>
+      </div>
+    </div>
+
+    <!-- Caption -->
+    <p class="text-center text-[#86868b] text-lg mt-8 reveal">
+      « Chaque pixel compte. Chaque interaction est intentionnelle. »
+    </p>
+  </div>
+</section>
+
+<div class="apple-divider max-w-[1080px] mx-auto"></div>
+
+<!-- ═══════════════════════════════════
+     BENTO FEATURES GRID
+     ═══════════════════════════════════ -->
+<section id="fonctionnalites" class="py-32 px-6">
+  <div class="max-w-[1200px] mx-auto">
+    <div class="text-center mb-20">
+      <h2 class="headline-section text-[#f5f5f7] reveal">
+        Explorez les<br>fonctionnalités.
+      </h2>
+      <p class="subhead mt-5 max-w-[520px] mx-auto reveal reveal-delay-1">
+        Chaque détail a été pensé pour transformer votre quotidien.
+      </p>
+    </div>
+
+    <div class="bento-grid">
+
+      <!-- Card 1 — Wide -->
+      <div class="bento-card bento-wide bento-blue reveal">
+        <div class="bento-icon" style="background: rgba(0,102,204,0.2);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4da3ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <h3 class="headline-bento text-[#f5f5f7]">Instantané.<br>Comme une évidence.</h3>
+        <p class="text-[#86868b] text-[15px] mt-3 leading-relaxed max-w-[380px]">
+          Créez une commande en moins de 30 secondes. Aucune formation requise.
+        </p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="bento-card bento-dark reveal reveal-delay-1">
+        <div class="bento-icon" style="background: rgba(94,92,230,0.15);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8884ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+          </svg>
+        </div>
+        <h3 class="headline-bento text-[#f5f5f7]">Multi-étapes.</h3>
+        <p class="text-[#86868b] text-[15px] mt-3 leading-relaxed">
+          Un flux guidé en 5 étapes, pensé comme une conversation.
+        </p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="bento-card bento-darker reveal reveal-delay-2">
+        <div class="bento-icon" style="background: rgba(255,159,10,0.15);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffb340" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+        </div>
+        <h3 class="headline-bento text-[#f5f5f7]">Personnalisable.</h3>
+        <p class="text-[#86868b] text-[15px] mt-3 leading-relaxed">
+          Adaptez chaque champ à votre métier. Sans code.
+        </p>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="bento-card bento-accent reveal reveal-delay-1">
+        <div class="bento-icon" style="background: rgba(48,209,88,0.15);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+            <path d="M8 12l3 3 5-5"/>
+          </svg>
+        </div>
+        <h3 class="headline-bento text-[#f5f5f7]">Fiable.</h3>
+        <p class="text-[#86868b] text-[15px] mt-3 leading-relaxed">
+          Zéro perte de données. Chaque commande est sauvegardée en temps réel.
+        </p>
+      </div>
+
+      <!-- Card 5 — Wide -->
+      <div class="bento-card bento-wide bento-warm reveal reveal-delay-2">
+        <div class="bento-icon" style="background: rgba(255,69,58,0.15);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6961" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+            <line x1="4" y1="22" x2="4" y2="15"/>
+          </svg>
+        </div>
+        <h3 class="headline-bento text-[#f5f5f7]">Pensé pour le terrain.<br>Pas pour le bureau.</h3>
+        <p class="text-[#86868b] text-[15px] mt-3 leading-relaxed max-w-[420px]">
+          Interface optimisée tactile. Fonctionne sur mobile, tablette et desktop avec la même fluidité.
+        </p>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="bento-card bento-dark reveal reveal-delay-3">
+        <div class="bento-icon" style="background: rgba(0,199,190,0.15);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#32d7d1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </div>
+        <h3 class="headline-bento text-[#f5f5f7]">Export PDF.</h3>
+        <p class="text-[#86868b] text-[15px] mt-3 leading-relaxed">
+          Générez vos bons de commande en un tap. Prêts à imprimer.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="apple-divider max-w-[1080px] mx-auto"></div>
+
+<!-- ═══════════════════════════════════
+     NUMBERS / STATS
+     ═══════════════════════════════════ -->
+<section class="py-32 px-6">
+  <div class="max-w-[1080px] mx-auto">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+      <div class="reveal">
+        <div class="text-4xl md:text-5xl font-semibold text-[#f5f5f7]" style="letter-spacing:-0.04em;">30s</div>
+        <p class="text-[#86868b] text-sm mt-2">pour créer une commande</p>
+      </div>
+      <div class="reveal reveal-delay-1">
+        <div class="text-4xl md:text-5xl font-semibold text-[#f5f5f7]" style="letter-spacing:-0.04em;">100%</div>
+        <p class="text-[#86868b] text-sm mt-2">hors-ligne capable</p>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <div class="text-4xl md:text-5xl font-semibold text-[#f5f5f7]" style="letter-spacing:-0.04em;">0€</div>
+        <p class="text-[#86868b] text-sm mt-2">pour toujours</p>
+      </div>
+      <div class="reveal reveal-delay-3">
+        <div class="text-4xl md:text-5xl font-semibold text-[#f5f5f7]" style="letter-spacing:-0.04em;">5★</div>
+        <p class="text-[#86868b] text-sm mt-2">satisfaction terrain</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="apple-divider max-w-[1080px] mx-auto"></div>
+
+<!-- ═══════════════════════════════════
+     CTA FINAL — Ultra minimal
+     ═══════════════════════════════════ -->
+<section id="commencer" class="py-40 px-6">
+  <div class="max-w-[680px] mx-auto text-center">
+    <h2 class="headline-section text-[#f5f5f7] reveal">
+      Prêt à essayer ?
+    </h2>
+    <p class="subhead mt-5 reveal reveal-delay-1">
+      Commencez maintenant. Aucune inscription requise.
+    </p>
+    <div class="flex items-center justify-center gap-4 mt-10 flex-wrap reveal reveal-delay-2">
+      <a href="index.html" class="btn-pill btn-pill-blue">
+        Lancer OLDA
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+      <a href="#produit" class="btn-pill btn-pill-dark">En savoir plus</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     FOOTER — Minimal Apple style
+     ═══════════════════════════════════ -->
+<footer class="py-8 px-6" style="background:#1d1d1f;">
+  <div class="max-w-[1080px] mx-auto">
+    <div class="apple-divider mb-6" style="background:rgba(255,255,255,0.06);"></div>
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-[12px] text-[#86868b]">
+      <p>Copyright &copy; 2026 OLDA. Tous droits réservés.</p>
+      <div class="flex items-center gap-6">
+        <a href="#" class="text-[#86868b] hover:text-[#f5f5f7] transition-colors no-underline">Confidentialité</a>
+        <a href="#" class="text-[#86868b] hover:text-[#f5f5f7] transition-colors no-underline">Conditions</a>
+        <a href="#" class="text-[#86868b] hover:text-[#f5f5f7] transition-colors no-underline">Contact</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════
+     JAVASCRIPT — Scroll Reveal + Nav
+     ═══════════════════════════════════ -->
+<script>
+(function() {
+  'use strict';
+
+  // ── Intersection Observer: Scroll Reveal ──
+  const reveals = document.querySelectorAll('.reveal');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.12,
+    rootMargin: '0px 0px -60px 0px'
+  });
+
+  reveals.forEach(el => revealObserver.observe(el));
+
+  // ── Navbar: transparent at top, glass when scrolled ──
+  const navbar = document.getElementById('navbar');
+  let ticking = false;
+
+  function updateNav() {
+    if (window.scrollY > 40) {
+      navbar.classList.remove('at-top');
+    } else {
+      navbar.classList.add('at-top');
+    }
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(updateNav);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  // ── Smooth scroll for anchor links ──
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>
