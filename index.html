@@ -294,26 +294,26 @@
         }
         .logo-zone.selected .logo-frame { display: block; }
 
-        /* Indicateur de resize — coin SE discret */
-        .logo-resize-corner {
-            position: absolute;
-            bottom: 0; right: 0;
-            width: 32%; height: 32%;
-            min-width: 22px; min-height: 22px;
-            z-index: 11;
-            cursor: se-resize;
-            touch-action: none;
-            display: none;
-        }
-        .logo-zone.selected .logo-resize-corner { display: block; }
-        .logo-resize-corner::after {
+        /* Indicateurs de coin (resize visuel quand sélectionné) */
+        .logo-zone.selected::before,
+        .logo-zone.selected::after {
             content: '';
             position: absolute;
-            bottom: 3px; right: 3px;
-            width: 9px; height: 9px;
-            border-right: 2.5px solid var(--accent);
-            border-bottom: 2.5px solid var(--accent);
-            border-radius: 1px;
+            width: 10px; height: 10px;
+            border-color: var(--accent);
+            border-style: solid;
+            z-index: 12;
+            pointer-events: none;
+        }
+        .logo-zone.selected::before {
+            top: -1px; left: -1px;
+            border-width: 2.5px 0 0 2.5px;
+            border-radius: 2px 0 0 0;
+        }
+        .logo-zone.selected::after {
+            bottom: -1px; right: -1px;
+            border-width: 0 2.5px 2.5px 0;
+            border-radius: 0 0 2px 0;
         }
 
         /* ═══════════════════════════════════
@@ -868,7 +868,6 @@
                              style="left:50%;top:42%;width:24%;height:17%;">
                             <div class="logo-inner" id="logoInnerFront"></div>
                             <div class="logo-frame"></div>
-                            <div class="logo-resize-corner"></div>
                         </div>
                     </div>
                 </div>
@@ -888,7 +887,6 @@
                              style="left:50%;top:42%;width:24%;height:17%;">
                             <div class="logo-inner" id="logoInnerBack"></div>
                             <div class="logo-frame"></div>
-                            <div class="logo-resize-corner"></div>
                         </div>
                     </div>
                 </div>
@@ -1492,6 +1490,25 @@ function initLogoInteraction() {
 
         zone.addEventListener('pointerdown', e => onLogoDown(e, s));
 
+        /* Curseur dynamique : coins = resize, centre = move */
+        zone.addEventListener('pointermove', e => {
+            if (dragState) return; // pas de mise à jour pendant le drag
+            if (!logos[s].data) return;
+            const zr = zone.getBoundingClientRect();
+            const rx = (e.clientX - zr.left)  / zr.width;
+            const ry = (e.clientY - zr.top)   / zr.height;
+            const EDGE = 0.35;
+            const corner = (rx < EDGE || rx > 1 - EDGE) && (ry < EDGE || ry > 1 - EDGE);
+            if (corner) {
+                const cx = rx > 0.5 ? 'e' : 'w';
+                const cy = ry > 0.5 ? 's' : 'n';
+                const cursors = { nw:'nwse-resize', ne:'nesw-resize', sw:'nesw-resize', se:'nwse-resize' };
+                zone.style.cursor = cursors[cy + cx];
+            } else {
+                zone.style.cursor = 'move';
+            }
+        });
+
         /* ── Pinch-to-zoom sur toute la zone SVG (2 doigts = resize diagonal) ── */
         view.addEventListener('touchstart', e => {
             if (e.touches.length === 2 && logos[s].data) {
@@ -1574,11 +1591,19 @@ function onLogoDown(e, activeSide) {
     logoSelected = true;
     zone.classList.add('selected');
 
-    const isResizeCorner = e.target.closest('.logo-resize-corner');
-    if (isResizeCorner) {
+    /* Détection positionnelle : coins = resize diagonal, centre = déplacement */
+    const zoneRect = zone.getBoundingClientRect();
+    const relX = (e.clientX - zoneRect.left) / zoneRect.width;
+    const relY = (e.clientY - zoneRect.top)  / zoneRect.height;
+    const EDGE = 0.35;
+    const inCorner = (relX < EDGE || relX > 1 - EDGE) && (relY < EDGE || relY > 1 - EDGE);
+
+    if (inCorner) {
+        const cornerX = relX > 0.5 ? 'e' : 'w';
+        const cornerY = relY > 0.5 ? 's' : 'n';
         dragState = {
             type: 'resize', side: activeSide,
-            corner: 'se',
+            corner: cornerY + cornerX,
             startX: e.clientX, startY: e.clientY,
             origW: cur.w, origH: cur.h, origX: cur.x, origY: cur.y,
             stageW: rect.width, stageH: rect.height
