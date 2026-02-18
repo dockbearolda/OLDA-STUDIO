@@ -319,9 +319,8 @@
         <div class="fiche-header">
             <div class="flex justify-between items-start">
                 <div>
-                    <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest" id="fCommande"></p>
+                    <p class="text-[10px] text-zinc-400 font-black uppercase tracking-widest font-mono" id="fCommande"></p>
                     <h2 class="text-2xl font-bold mt-1" id="fNom"></h2>
-                    <p class="text-zinc-500 text-sm mt-1" id="fTel"></p>
                 </div>
                 <div class="text-right">
                     <span class="badge" id="fBadge"></span>
@@ -503,7 +502,6 @@ function renderFicheDetail(f) {
     /* Header */
     document.getElementById('fCommande').textContent = f.commande || '';
     document.getElementById('fNom').textContent = f.nom || '';
-    document.getElementById('fTel').textContent = f.telephone || '';
     document.getElementById('fDate').textContent = f.date || '';
 
     /* Badge paiement */
@@ -607,7 +605,7 @@ function buildWaMessage(f) {
     return 'Bonjour ' + nom + ' \uD83D\uDDA4\n\n' +
         'Votre commande OLDA est prête.\n' +
         lignes.join('\n') + '\n' +
-        'N\u00B0 ' + (f.commande || '') + '\n\n' +
+        'ID ' + (f.commande || '') + '\n\n' +
         'Vous pouvez venir la r\u00E9cup\u00E9rer quand vous le souhaitez. \uD83D\uDE0A\n\n' +
         '\u2014 OLDA Studio';
 }
@@ -697,9 +695,8 @@ window.ouvrirFiche = function(key) {
             '<div style="padding:28px 24px 20px;border-bottom:1px solid #2c2c2e;">' +
                 '<div class="flex justify-between items-start">' +
                     '<div>' +
-                        '<span class="text-[10px] text-zinc-500 font-black uppercase tracking-widest">' + (f.commande || '') + '</span>' +
+                        '<span class="text-[10px] text-zinc-500 font-black uppercase tracking-widest font-mono">' + (f.commande || '') + '</span>' +
                         '<h2 class="text-2xl font-bold mt-1 text-white">' + (f.nom || '') + '</h2>' +
-                        '<p class="text-zinc-500 text-sm mt-1">' + (f.telephone || '') + '</p>' +
                     '</div>' +
                     '<div class="text-right">' +
                         '<span class="badge ' + badgeClass + '">' + badgeText + '</span>' +
