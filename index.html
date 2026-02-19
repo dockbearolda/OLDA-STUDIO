@@ -37,6 +37,7 @@
         }
 
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; }
+        input, select, textarea { -webkit-appearance: none; -moz-appearance: none; appearance: none; border-radius: 0; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -874,7 +875,7 @@
                 <div class="flex items-center py-3">
                     <span class="w-24 shrink-0 text-[12px] font-black text-gray-300 uppercase tracking-[0.18em]">NOM</span>
                     <input type="text" id="clientNom"
-                           class="flex-1 bg-transparent text-[17px] font-semibold text-gray-900 tracking-tight placeholder:text-gray-300 placeholder:font-normal outline-none border-0 focus:ring-0"
+                           class="flex-1 min-w-0 p-0 bg-transparent text-[17px] font-semibold text-gray-900 tracking-tight placeholder:text-gray-300 placeholder:font-normal outline-none border-0 focus:ring-0"
                            placeholder="Dubois" autocomplete="family-name">
                 </div>
 
@@ -882,7 +883,7 @@
                 <div class="flex items-center py-3">
                     <span class="w-24 shrink-0 text-[12px] font-black text-gray-300 uppercase tracking-[0.18em]">PRÉNOM</span>
                     <input type="text" id="clientPrenom"
-                           class="flex-1 bg-transparent text-[17px] font-semibold text-gray-900 tracking-tight placeholder:text-gray-300 placeholder:font-normal outline-none border-0 focus:ring-0"
+                           class="flex-1 min-w-0 p-0 bg-transparent text-[17px] font-semibold text-gray-900 tracking-tight placeholder:text-gray-300 placeholder:font-normal outline-none border-0 focus:ring-0"
                            placeholder="Pierre" autocomplete="given-name">
                 </div>
 
@@ -890,15 +891,15 @@
                 <div class="flex items-center py-3">
                     <span class="w-24 shrink-0 text-[12px] font-black text-gray-300 uppercase tracking-[0.18em]">TEL</span>
                     <input type="tel" id="clientPhone"
-                           class="flex-1 bg-transparent text-[17px] font-semibold text-gray-900 tracking-tight placeholder:text-gray-300 placeholder:font-normal outline-none border-0 focus:ring-0"
+                           class="flex-1 min-w-0 p-0 bg-transparent text-[17px] font-semibold text-gray-900 tracking-tight placeholder:text-gray-300 placeholder:font-normal outline-none border-0 focus:ring-0"
                            placeholder="0690 00 00 00">
                 </div>
 
-                <!-- ÉCHÉANCE — une ligne -->
+                <!-- LIMIT — une ligne -->
                 <div class="flex items-center py-3">
-                    <span class="w-24 shrink-0 text-[12px] font-black text-gray-300 uppercase tracking-[0.18em]">ÉCHÉANCE</span>
+                    <span class="w-24 shrink-0 text-[12px] font-black text-gray-300 uppercase tracking-[0.18em]">LIMIT</span>
                     <input type="date" id="clientDeadline"
-                           class="flex-1 bg-transparent text-[17px] font-semibold text-gray-900 tracking-tight outline-none border-0 focus:ring-0">
+                           class="flex-1 min-w-0 p-0 bg-transparent text-[17px] font-semibold text-gray-900 tracking-tight outline-none border-0 focus:ring-0">
                 </div>
 
             </div>
