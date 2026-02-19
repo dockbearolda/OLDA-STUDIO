@@ -525,6 +525,10 @@
                 <span class="detail-label">Logo arrière</span>
                 <span class="detail-value" id="fLogoArriere"></span>
             </div>
+            <div class="detail-row" id="fLogoArMmRow" style="display:none">
+                <span class="detail-label">Largeur logo Ar</span>
+                <span class="detail-value" id="fLogoArMm"></span>
+            </div>
         </div>
 
         <!-- Note -->
@@ -717,6 +721,11 @@ function renderFicheDetail(f) {
         f.logoAvant ? (f.couleurLogoAvant ? f.logoAvant + ' / ' + f.couleurLogoAvant : f.logoAvant) : 'Aucun';
     document.getElementById('fLogoArriere').textContent =
         f.logoArriere ? (f.couleurLogoArriere ? f.logoArriere + ' / ' + f.couleurLogoArriere : f.logoArriere) : 'Aucun';
+
+    var arMmRow = document.getElementById('fLogoArMmRow');
+    var arMmEl  = document.getElementById('fLogoArMm');
+    if (arMmRow) arMmRow.style.display = f.largeurLogoAr ? '' : 'none';
+    if (arMmEl && f.largeurLogoAr) arMmEl.textContent = f.largeurLogoAr + ' mm';
 
     /* Note */
     var noteSection = document.getElementById('fNoteSection');
