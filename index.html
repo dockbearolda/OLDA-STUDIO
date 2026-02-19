@@ -1228,6 +1228,9 @@ const LOGOS = {
         {id:'cor-1',n:'Shield',s:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><path d="M60 18 L95 35 L95 70 Q95 95 60 108 Q25 95 25 70 L25 35 Z" stroke="#1A1A1A" stroke-width="2.5" fill="none"/><text x="60" y="62" text-anchor="middle" font-size="20" font-weight="900" fill="#1A1A1A" font-family="sans-serif">COR</text><text x="60" y="80" text-anchor="middle" font-size="9" font-weight="500" fill="#1A1A1A" letter-spacing="2" font-family="sans-serif">— 01 —</text></svg>`},
         {id:'cor-2',n:'Typo',s:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><text x="60" y="45" text-anchor="middle" font-size="40" font-weight="900" fill="#1A1A1A" font-family="sans-serif">C</text><line x1="25" y1="55" x2="95" y2="55" stroke="#1A1A1A" stroke-width="2"/><text x="60" y="72" text-anchor="middle" font-size="11" font-weight="600" fill="#1A1A1A" letter-spacing="8" font-family="sans-serif">CORSICA</text><text x="60" y="92" text-anchor="middle" font-size="9" font-weight="500" fill="#1A1A1A" font-family="sans-serif">Edition 01</text></svg>`},
         {id:'cor-3',n:'Crest',s:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><ellipse cx="60" cy="58" rx="42" ry="45" stroke="#1A1A1A" stroke-width="2" fill="none"/><ellipse cx="60" cy="58" rx="35" ry="38" stroke="#1A1A1A" stroke-width="1" fill="none" opacity="0.3"/><text x="60" y="55" text-anchor="middle" font-family="Georgia,serif" font-size="22" font-weight="700" font-style="italic" fill="#1A1A1A">Cor</text><text x="60" y="72" text-anchor="middle" font-size="8" font-weight="600" fill="#1A1A1A" letter-spacing="5" font-family="sans-serif">PREMIERE</text><circle cx="60" cy="85" r="3" fill="#1A1A1A"/></svg>`}
+    ],
+    pay:[
+        {id:'pay-01',n:'Paysage 01',url:'pay01.svg'}
     ]
 };
 
@@ -1918,24 +1921,35 @@ function buildSheetLogoGrid() {
     Object.entries(LOGOS).forEach(([k, arr]) => {
         const label = document.createElement('div');
         label.className = 'lsheet-group-label';
-        label.textContent = k === 'bea' ? 'BEA — 16' : k === 'sxm' ? 'SXM — 12' : 'COR — 01';
+        label.textContent = k === 'bea' ? 'BEA — 16' : k === 'sxm' ? 'SXM — 12' : k === 'cor' ? 'COR — 01' : 'PAYSAGES';
         grid.appendChild(label);
         const g = document.createElement('div');
         g.className = 'lsheet-logo-grid';
         arr.forEach(l => {
             const thumb = document.createElement('div');
             thumb.className = 'lsheet-thumb' + (cur.data && cur.data.id === l.id ? ' on' : '');
-            const svgContainer = document.createElement('div');
-            svgContainer.innerHTML = l.s;
-            const svgEl = svgContainer.querySelector('svg');
-            if (svgEl) { svgEl.setAttribute('width','56'); svgEl.setAttribute('height','56'); }
+            if (l.url) {
+                const imgEl = document.createElement('img');
+                imgEl.src = l.url;
+                imgEl.style.cssText = 'width:56px;height:56px;object-fit:cover;border-radius:6px;';
+                thumb.appendChild(imgEl);
+            } else {
+                const svgContainer = document.createElement('div');
+                svgContainer.innerHTML = l.s;
+                const svgEl = svgContainer.querySelector('svg');
+                if (svgEl) { svgEl.setAttribute('width','56'); svgEl.setAttribute('height','56'); }
+                if (svgEl) thumb.appendChild(svgEl);
+            }
             const nameEl = document.createElement('div');
             nameEl.className = 'lsheet-thumb-name';
             nameEl.textContent = l.n;
-            if (svgEl) thumb.appendChild(svgEl);
             thumb.appendChild(nameEl);
             thumb.addEventListener('click', () => {
-                cur.data = { type: 'atelier', id: l.id, s: l.s };
+                if (l.url) {
+                    cur.data = { type: 'custom', id: l.id, url: l.url, name: l.n };
+                } else {
+                    cur.data = { type: 'atelier', id: l.id, s: l.s };
+                }
                 cur.x = _sheetSide === 'front' ? 66.5 : 47.9;
                 cur.y = _sheetSide === 'front' ? 28 : 31;
                 cur.w = _sheetSide === 'front' ? 18.9 : 67.2;
@@ -1974,6 +1988,9 @@ function buildSheetColorRow() {
 
 function updateSheetColorSection() {
     buildSheetColorRow();
+    const cur = logos[_sheetSide];
+    const section = document.getElementById('lsheetColorSection');
+    if (section) section.style.display = (cur.data && cur.data.type === 'atelier') ? '' : 'none';
 }
 
 window.openLogoSheet = function(s) {
