@@ -154,6 +154,17 @@
         .aselect-compact .aselect-trigger { padding: 12px 28px 12px 12px; font-size: 14px; }
         .aselect-compact .aselect-chevron { right: 10px; }
 
+        /* Inline selects for single-line rows (paiement) */
+        .aselect-inline .aselect-trigger {
+            background: transparent; border: none; box-shadow: none;
+            padding: 0 22px 0 0; border-radius: 0;
+            font-size: 17px; font-weight: 600; color: var(--text-1);
+            text-align: right; letter-spacing: -0.02em;
+        }
+        .aselect-inline.open .aselect-trigger { box-shadow: none; border: none; }
+        .aselect-inline .aselect-chevron { right: 0; opacity: 0.35; }
+        .aselect-inline .aselect-dropdown { min-width: 160px; left: auto; right: 0; }
+
         /* ═══════════════════════════════════
            BUTTONS
            ═══════════════════════════════════ */
@@ -989,17 +1000,13 @@
                 <!-- T-SHIRT -->
                 <div class="flex items-center py-3">
                     <span class="w-28 shrink-0 text-[12px] font-black text-gray-300 uppercase tracking-[0.18em]">T-Shirt</span>
-                    <input type="number" id="price" value="25" oninput="calcTotal()"
-                           class="flex-1 bg-transparent text-[17px] font-semibold text-gray-900 tracking-tight outline-none border-0 focus:ring-0 text-right">
-                    <span class="ml-1 text-[17px] font-semibold text-gray-900">€</span>
+                    <div class="aselect aselect-inline flex-1" id="selPrice"></div>
                 </div>
 
                 <!-- PERSO -->
                 <div class="flex items-center py-3">
                     <span class="w-28 shrink-0 text-[12px] font-black text-gray-300 uppercase tracking-[0.18em]">Perso</span>
-                    <input type="number" id="customPrice" value="0" oninput="calcTotal()"
-                           class="flex-1 bg-transparent text-[17px] font-semibold text-gray-900 tracking-tight outline-none border-0 focus:ring-0 text-right">
-                    <span class="ml-1 text-[17px] font-semibold text-gray-900">€</span>
+                    <div class="aselect aselect-inline flex-1" id="selPerso"></div>
                 </div>
 
                 <!-- TOTAL -->
@@ -1441,6 +1448,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Couleur T-shirt — menu déroulant
     initColorSelect();
+
+    // Prix T-shirt et Personnalisation — menus déroulants (step 3)
+    const mkPriceOpts = vals => vals.map(v => ({ v: String(v), l: v + ' €' }));
+    const selP = createRichSelect('selPrice', mkPriceOpts([15,20,25,30,35,40,45,50]), '— €', () => calcTotal());
+    if (selP) { selP.setValue('25'); }
+    const selQ = createRichSelect('selPerso', mkPriceOpts([0,5,10,15,20,25,30]), '— €', () => calcTotal());
+    if (selQ) { selQ.setValue('0'); }
+    calcTotal();
 
     // Logo interaction — géré directement depuis le t-shirt (bottom sheet)
 
@@ -1966,7 +1981,8 @@ window.setPay = function(s) {
 };
 
 window.calcTotal = function() {
-    const t = (parseFloat(document.getElementById('price').value)||0) + (parseFloat(document.getElementById('customPrice').value)||0);
+    const t = (parseFloat(selects['selPrice'] && selects['selPrice'].value) || 0)
+            + (parseFloat(selects['selPerso'] && selects['selPerso'].value) || 0);
     document.getElementById('totalLabel').textContent = t;
 };
 
@@ -2056,8 +2072,8 @@ window.submit = async function() {
         logoAvant         : logos.front.data ? (logos.front.data.type === 'atelier' ? logos.front.data.id : 'Custom') : '',
         logoArriere       : logos.back.data  ? (logos.back.data.type  === 'atelier' ? logos.back.data.id  : 'Custom') : '',
         note              : (document.getElementById('note').value || '').trim(),
-        prixTshirt        : document.getElementById('price').value        || '0',
-        personnalisation  : document.getElementById('customPrice').value  || '0',
+        prixTshirt        : (selects['selPrice']  && selects['selPrice'].value)  || '0',
+        personnalisation  : (selects['selPerso']  && selects['selPerso'].value)  || '0',
         total             : document.getElementById('totalLabel').textContent.trim(),
         paye              : payStatus === 'oui' ? 'OUI' : 'NON'
     };
