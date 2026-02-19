@@ -756,7 +756,7 @@ function renderFicheDetail(f) {
         delete ficheLight.mockupFront;
         delete ficheLight.mockupBack;
         var lightEncoded = btoa(unescape(encodeURIComponent(JSON.stringify(ficheLight))));
-        var lightURL = 'https://ficheatelier.pages.dev#' + lightEncoded;
+        var lightURL = 'https://ficheatelier.pages.dev/ficheatelier-index.html#' + lightEncoded;
         new QRCode(qrBox, {
             text     : lightURL,
             width    : 74,
@@ -977,7 +977,7 @@ window.loadOrders = function() {
 
             var tile = document.createElement('div');
             tile.className = 'mosaic-tile';
-            tile.onclick = function() { ouvrirFiche(key); };
+            tile.onclick = function() { voirFiche(key); };
 
             tile.innerHTML =
                 '<div class="mosaic-header">' +
