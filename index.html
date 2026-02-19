@@ -892,7 +892,7 @@
                             </div>
                         </div>
                         <div class="logo-zone empty" id="logoZoneBack" data-side="back"
-                             style="left:50%;top:31%;width:70%;height:17%;">
+                             style="left:50%;top:31%;width:56.7%;height:37.8%;">
                             <div class="logo-inner" id="logoInnerBack"></div>
                             <div class="logo-frame"></div>
                         </div>
@@ -1110,7 +1110,7 @@ let svgB  = null;
 /* Per-side logo state (J: Logo Avant, K: Logo Arriere) — logoColor per side */
 const logos = {
     front: { data: null, x: 62.5, y: 31, w: 21, h: 14, logoColor: '#1A1A1A' },
-    back:  { data: null, x: 50,   y: 31, w: 70, h: 17, logoColor: '#1A1A1A' }
+    back:  { data: null, x: 50,   y: 31, w: 56.7, h: 37.8, logoColor: '#1A1A1A' }
 };
 function cl() { return logos[side]; }
 
@@ -1707,8 +1707,8 @@ window.onUpload = function(e) {
         document.getElementById('upPill').classList.add('show');
         cur.x = side === 'front' ? 62.5 : 50;
         cur.y = 31;
-        cur.w = side === 'front' ? 21 : 70;
-        cur.h = side === 'front' ? 14 : 17;
+        cur.w = side === 'front' ? 21 : 56.7;
+        cur.h = side === 'front' ? 14 : 37.8;
         renderLogo();
         closeLogoSheet();
     };
@@ -1779,8 +1779,8 @@ function buildSheetLogoGrid() {
                 cur.data = { type: 'atelier', id: l.id, s: l.s };
                 cur.x = _sheetSide === 'front' ? 62.5 : 50;
                 cur.y = 31;
-                cur.w = _sheetSide === 'front' ? 21 : 70;
-                cur.h = _sheetSide === 'front' ? 14 : 17;
+                cur.w = _sheetSide === 'front' ? 21 : 56.7;
+                cur.h = _sheetSide === 'front' ? 14 : 37.8;
                 renderLogo();
                 updateSheetColorSection();
                 buildSheetLogoGrid();
