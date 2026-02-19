@@ -259,34 +259,6 @@
             filter: drop-shadow(0 4px 18px rgba(0,0,0,0.09));
         }
 
-        /* ── Sliders Y Apple-style ── */
-        .y-sliders-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
-            padding: 10px 2px 2px;
-        }
-        .y-slider-col { display: flex; flex-direction: column; gap: 5px; }
-        .y-slider-label {
-            font-size: 10px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 1px; color: #86868b; text-align: center;
-        }
-        .y-slider {
-            -webkit-appearance: none; appearance: none;
-            width: 100%; height: 3px;
-            background: rgba(0,0,0,0.13); border-radius: 2px;
-            outline: none; cursor: pointer;
-        }
-        .y-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 24px; height: 24px;
-            background: #fff; border-radius: 50%;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.22), 0 0 0 0.5px rgba(0,0,0,0.06);
-            cursor: grab; transition: transform 0.1s;
-        }
-        .y-slider:active::-webkit-slider-thumb { transform: scale(1.15); cursor: grabbing; }
-        .y-slider::-moz-range-thumb {
-            width: 24px; height: 24px; background: #fff; border-radius: 50%;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.22); border: none; cursor: grab;
-        }
 
         /* ═══════════════════════════════════
            LOGO ZONE (Keynote Interaction)
@@ -322,23 +294,27 @@
         }
         .logo-zone.selected .logo-frame { display: block; }
 
-        /* Resize Handles — grossis pour le tactile */
-        .logo-handle {
+        /* Indicateurs de coin (resize visuel quand sélectionné) */
+        .logo-zone.selected::before,
+        .logo-zone.selected::after {
+            content: '';
             position: absolute;
-            width: 22px; height: 22px;
-            border-radius: 50%;
-            background: white;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,122,255,0.4);
-            border: 2px solid var(--accent);
-            z-index: 11;
-            display: none;
-            touch-action: none;
+            width: 10px; height: 10px;
+            border-color: var(--accent);
+            border-style: solid;
+            z-index: 12;
+            pointer-events: none;
         }
-        .logo-zone.selected .logo-handle { display: block; }
-        .logo-handle.nw { top: -11px; left: -11px; cursor: nwse-resize; }
-        .logo-handle.ne { top: -11px; right: -11px; cursor: nesw-resize; }
-        .logo-handle.sw { bottom: -11px; left: -11px; cursor: nesw-resize; }
-        .logo-handle.se { bottom: -11px; right: -11px; cursor: nwse-resize; }
+        .logo-zone.selected::before {
+            top: -1px; left: -1px;
+            border-width: 2.5px 0 0 2.5px;
+            border-radius: 2px 0 0 0;
+        }
+        .logo-zone.selected::after {
+            bottom: -1px; right: -1px;
+            border-width: 0 2.5px 2.5px 0;
+            border-radius: 0 0 2px 0;
+        }
 
         /* ═══════════════════════════════════
            TAP OVERLAY (état vide du t-shirt)
@@ -348,25 +324,35 @@
             inset: 0;
             z-index: 5;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-        .logo-tap-inner {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            border: 1.5px dashed rgba(0,122,255,0.3);
-            border-radius: 12px;
-            padding: 10px 16px;
-            background: rgba(0,122,255,0.04);
-            transition: all 0.18s;
+        .logo-tap-pip {
+            position: absolute;
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: rgba(0,122,255,0.11);
+            border: 1.5px solid rgba(0,122,255,0.28);
+            display: flex; align-items: center; justify-content: center;
+            transform: translate(-50%, -50%);
+            transition: background 0.15s, transform 0.15s;
+            animation: tapPulse 2.4s ease-out infinite;
         }
-        .logo-tap-overlay:active .logo-tap-inner { background: rgba(0,122,255,0.1); transform: scale(0.96); }
-        .logo-tap-plus { font-size: 20px; line-height: 1; color: rgba(0,122,255,0.55); font-weight: 300; }
-        .logo-tap-text { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(0,122,255,0.55); }
+        /* Position cœur pour l'avant (poitrine gauche du porteur = droite de l'image) */
+        .logo-tap-front .logo-tap-pip { left: 60.5%; top: 33%; }
+        /* Arrière décalé 2.5% à gauche */
+        .logo-tap-back  .logo-tap-pip { left: 47.5%; top: 33%; }
+
+        .logo-tap-overlay:active .logo-tap-pip {
+            background: rgba(0,122,255,0.22);
+            transform: translate(-50%, -50%) scale(0.88);
+            animation: none;
+        }
         .logo-tap-overlay.gone { display: none; }
+
+        @keyframes tapPulse {
+            0%   { box-shadow: 0 0 0 0 rgba(0,122,255,0.22); }
+            60%  { box-shadow: 0 0 0 9px rgba(0,122,255,0); }
+            100% { box-shadow: 0 0 0 0 rgba(0,122,255,0); }
+        }
 
         /* ═══════════════════════════════════
            FLOAT BAR (barre flottante logo)
@@ -381,31 +367,10 @@
             box-shadow: 0 1px 8px rgba(0,0,0,0.09), 0 0 0 0.5px rgba(0,0,0,0.05);
             display: flex;
             align-items: center;
-            gap: 7px;
+            justify-content: center;
+            gap: 8px;
             animation: enterStep 0.2s ease;
         }
-        .fbar-dot {
-            width: 22px; height: 22px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-            transition: all 0.18s;
-            box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.12);
-            flex-shrink: 0;
-            position: relative;
-            padding: 0;
-        }
-        .fbar-dot::after {
-            content: '';
-            position: absolute;
-            inset: -4px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            transition: border-color 0.18s;
-        }
-        .fbar-dot.on::after { border-color: var(--accent); }
-        .fbar-dot.on { transform: scale(0.78); }
-        .fbar-sep { width: 1px; height: 18px; background: rgba(0,0,0,0.08); flex-shrink: 0; margin: 0 1px; }
         .fbar-btn {
             padding: 5px 11px;
             border-radius: 9px;
@@ -420,7 +385,7 @@
         }
         .fbar-btn:active { transform: scale(0.93); }
         .fbar-change { background: rgba(0,122,255,0.1); color: var(--accent); }
-        .fbar-remove { background: rgba(255,59,48,0.08); color: var(--red); margin-left: auto; }
+        .fbar-remove { background: rgba(255,59,48,0.08); color: var(--red); }
 
         /* ═══════════════════════════════════
            LOGO BOTTOM SHEET
@@ -903,20 +868,15 @@
                     <p class="shirt-side-label">Avant</p>
                     <div class="svg-view" id="svgViewFront">
                         <div class="svg-box" id="svgBoxFront"></div>
-                        <div class="logo-tap-overlay" id="logoTapFront">
-                            <div class="logo-tap-inner">
-                                <div class="logo-tap-plus">+</div>
-                                <div class="logo-tap-text">Logo</div>
+                        <div class="logo-tap-overlay logo-tap-front" id="logoTapFront">
+                            <div class="logo-tap-pip">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
                             </div>
                         </div>
                         <div class="logo-zone empty" id="logoZoneFront" data-side="front"
-                             style="left:50%;top:42%;width:24%;height:17%;">
+                             style="left:60.5%;top:33%;width:24%;height:17%;">
                             <div class="logo-inner" id="logoInnerFront"></div>
                             <div class="logo-frame"></div>
-                            <div class="logo-handle nw" data-corner="nw"></div>
-                            <div class="logo-handle ne" data-corner="ne"></div>
-                            <div class="logo-handle sw" data-corner="sw"></div>
-                            <div class="logo-handle se" data-corner="se"></div>
                         </div>
                     </div>
                 </div>
@@ -926,20 +886,15 @@
                     <p class="shirt-side-label">Arrière</p>
                     <div class="svg-view" id="svgViewBack">
                         <div class="svg-box" id="svgBoxBack"></div>
-                        <div class="logo-tap-overlay" id="logoTapBack">
-                            <div class="logo-tap-inner">
-                                <div class="logo-tap-plus">+</div>
-                                <div class="logo-tap-text">Logo</div>
+                        <div class="logo-tap-overlay logo-tap-back" id="logoTapBack">
+                            <div class="logo-tap-pip">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
                             </div>
                         </div>
                         <div class="logo-zone empty" id="logoZoneBack" data-side="back"
-                             style="left:50%;top:42%;width:24%;height:17%;">
+                             style="left:47.5%;top:33%;width:24%;height:17%;">
                             <div class="logo-inner" id="logoInnerBack"></div>
                             <div class="logo-frame"></div>
-                            <div class="logo-handle nw" data-corner="nw"></div>
-                            <div class="logo-handle ne" data-corner="ne"></div>
-                            <div class="logo-handle sw" data-corner="sw"></div>
-                            <div class="logo-handle se" data-corner="se"></div>
                         </div>
                     </div>
                 </div>
@@ -947,23 +902,10 @@
 
             <!-- Float bar logo (affiché quand un logo est placé sur le côté actif) -->
             <div class="logo-float-bar" id="logoFloatBar" style="display:none;">
-                <div id="fbarColors" style="display:flex;gap:6px;align-items:center;flex:1;min-width:0;"></div>
-                <div class="fbar-sep"></div>
                 <button class="fbar-btn fbar-change" onclick="openLogoSheet()">Changer</button>
                 <button class="fbar-btn fbar-remove" onclick="dropLogo()">Retirer</button>
             </div>
 
-            <!-- Sliders Y Apple-style -->
-            <div class="y-sliders-grid">
-                <div class="y-slider-col">
-                    <span class="y-slider-label">Hauteur Av</span>
-                    <input type="range" class="y-slider" id="sliderFrontY" min="15" max="85" value="42">
-                </div>
-                <div class="y-slider-col">
-                    <span class="y-slider-label">Hauteur Ar</span>
-                    <input type="range" class="y-slider" id="sliderBackY" min="15" max="85" value="42">
-                </div>
-            </div>
 
             <p class="text-center mt-3 text-[13px] font-semibold" style="color:var(--text-2)" id="colorName">Blanc</p>
         </div>
@@ -1167,8 +1109,8 @@ let svgB  = null;
 
 /* Per-side logo state (J: Logo Avant, K: Logo Arriere) — logoColor per side */
 const logos = {
-    front: { data: null, x: 50, y: 42, w: 24, h: 17, logoColor: '#1A1A1A' },
-    back:  { data: null, x: 50, y: 42, w: 24, h: 17, logoColor: '#1A1A1A' }
+    front: { data: null, x: 60.5, y: 33, w: 24, h: 17, logoColor: '#1A1A1A' },
+    back:  { data: null, x: 47.5, y: 33, w: 24, h: 17, logoColor: '#1A1A1A' }
 };
 function cl() { return logos[side]; }
 
@@ -1367,7 +1309,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Couleur',
         (val) => {
             const c = COLORS.find(x => x.h === val);
-            if (c) { color = c; const g = document.getElementById('shirtsGrid'); g.style.opacity='0'; g.style.transform='scale(0.97)'; g.style.transition='opacity 0.18s,transform 0.18s'; setTimeout(() => { renderSVG(); g.style.opacity=''; g.style.transform=''; }, 180); }
+            if (c) { color = c; renderSVG(); }
         }
     );
     selects['selColor'].setValue(COLORS[0].h);
@@ -1514,9 +1456,6 @@ function updateLogoPositionForSide(s) {
     zone.style.top    = cur.y + '%';
     zone.style.width  = cur.w + '%';
     zone.style.height = cur.h + '%';
-    // Sync slider Y
-    const slider = document.getElementById(s === 'front' ? 'sliderFrontY' : 'sliderBackY');
-    if (slider) slider.value = cur.y;
 }
 
 function updateLogoPosition() {
@@ -1558,6 +1497,25 @@ function initLogoInteraction() {
         if (!zone || !view) return;
 
         zone.addEventListener('pointerdown', e => onLogoDown(e, s));
+
+        /* Curseur dynamique : coins = resize, centre = move */
+        zone.addEventListener('pointermove', e => {
+            if (dragState) return; // pas de mise à jour pendant le drag
+            if (!logos[s].data) return;
+            const zr = zone.getBoundingClientRect();
+            const rx = (e.clientX - zr.left)  / zr.width;
+            const ry = (e.clientY - zr.top)   / zr.height;
+            const EDGE = 0.35;
+            const corner = (rx < EDGE || rx > 1 - EDGE) && (ry < EDGE || ry > 1 - EDGE);
+            if (corner) {
+                const cx = rx > 0.5 ? 'e' : 'w';
+                const cy = ry > 0.5 ? 's' : 'n';
+                const cursors = { nw:'nwse-resize', ne:'nesw-resize', sw:'nesw-resize', se:'nwse-resize' };
+                zone.style.cursor = cursors[cy + cx];
+            } else {
+                zone.style.cursor = 'move';
+            }
+        });
 
         /* ── Pinch-to-zoom sur toute la zone SVG (2 doigts = resize diagonal) ── */
         view.addEventListener('touchstart', e => {
@@ -1613,15 +1571,7 @@ function initLogoInteraction() {
     if (tapF) tapF.addEventListener('click', () => { flipSide('front'); openLogoSheet('front'); });
     if (tapB) tapB.addEventListener('click', () => { flipSide('back');  openLogoSheet('back');  });
 
-    // Sliders Y
-    document.getElementById('sliderFrontY').addEventListener('input', e => {
-        logos.front.y = parseFloat(e.target.value);
-        updateLogoPositionForSide('front');
-    });
-    document.getElementById('sliderBackY').addEventListener('input', e => {
-        logos.back.y = parseFloat(e.target.value);
-        updateLogoPositionForSide('back');
-    });
+
 }
 
 function onLogoDown(e, activeSide) {
@@ -1649,16 +1599,22 @@ function onLogoDown(e, activeSide) {
     logoSelected = true;
     zone.classList.add('selected');
 
-    const handle = e.target.closest('.logo-handle');
-    if (handle) {
+    /* Détection positionnelle : coins = resize diagonal, centre = déplacement */
+    const zoneRect = zone.getBoundingClientRect();
+    const relX = (e.clientX - zoneRect.left) / zoneRect.width;
+    const relY = (e.clientY - zoneRect.top)  / zoneRect.height;
+    const EDGE = 0.35;
+    const inCorner = (relX < EDGE || relX > 1 - EDGE) && (relY < EDGE || relY > 1 - EDGE);
+
+    if (inCorner) {
+        const cornerX = relX > 0.5 ? 'e' : 'w';
+        const cornerY = relY > 0.5 ? 's' : 'n';
         dragState = {
             type: 'resize', side: activeSide,
-            corner: handle.dataset.corner,
+            corner: cornerY + cornerX,
             startX: e.clientX, startY: e.clientY,
             origW: cur.w, origH: cur.h, origX: cur.x, origY: cur.y,
-            stageW: rect.width, stageH: rect.height,
-            centerX: rect.left + (cur.x / 100) * rect.width,
-            centerY: rect.top  + (cur.y / 100) * rect.height
+            stageW: rect.width, stageH: rect.height
         };
     } else {
         dragState = {
@@ -1749,7 +1705,8 @@ window.onUpload = function(e) {
         document.getElementById('upThumb').src = ev.target.result;
         document.getElementById('upName').textContent = f.name;
         document.getElementById('upPill').classList.add('show');
-        cur.x = 50; cur.y = 42; cur.w = 24; cur.h = 17;
+        cur.x = side === 'front' ? 60.5 : 47.5;
+        cur.y = 33; cur.w = 24; cur.h = 17;
         renderLogo();
         closeLogoSheet();
     };
@@ -1785,23 +1742,6 @@ function updateFloatBar() {
     const cur = logos[side];
     if (!cur.data) { bar.style.display = 'none'; return; }
     bar.style.display = 'flex';
-    const colContainer = document.getElementById('fbarColors');
-    if (!colContainer) return;
-    colContainer.innerHTML = '';
-    LOGO_COLORS.forEach(c => {
-        const dot = document.createElement('button');
-        dot.className = 'fbar-dot' + (cur.logoColor === c.h ? ' on' : '');
-        dot.style.background = c.h;
-        dot.title = c.n;
-        dot.addEventListener('click', e => {
-            e.stopPropagation();
-            cur.logoColor = c.h;
-            renderLogoForSide('front');
-            renderLogoForSide('back');
-            updateFloatBar();
-        });
-        colContainer.appendChild(dot);
-    });
 }
 
 /* ══════════════════════════════════════
@@ -1835,7 +1775,8 @@ function buildSheetLogoGrid() {
             thumb.appendChild(nameEl);
             thumb.addEventListener('click', () => {
                 cur.data = { type: 'atelier', id: l.id, s: l.s };
-                cur.x = 50; cur.y = 42; cur.w = 24; cur.h = 17;
+                cur.x = _sheetSide === 'front' ? 60.5 : 47.5;
+                cur.y = 33; cur.w = 24; cur.h = 17;
                 renderLogo();
                 updateSheetColorSection();
                 buildSheetLogoGrid();
@@ -1881,7 +1822,7 @@ function updateSheetColorSection() {
 }
 
 window.openLogoSheet = function(s) {
-    if (s !== undefined) _sheetSide = s;
+    _sheetSide = (s !== undefined) ? s : side;
     document.getElementById('lsheetTitle').textContent = _sheetSide === 'front' ? 'Logo Avant' : 'Logo Arrière';
     buildSheetLogoGrid();
     updateSheetColorSection();
