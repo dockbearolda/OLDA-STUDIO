@@ -1812,7 +1812,7 @@ function updateSheetColorSection() {
 }
 
 window.openLogoSheet = function(s) {
-    if (s !== undefined) _sheetSide = s;
+    _sheetSide = (s !== undefined) ? s : side;
     document.getElementById('lsheetTitle').textContent = _sheetSide === 'front' ? 'Logo Avant' : 'Logo Arrière';
     buildSheetLogoGrid();
     updateSheetColorSection();
