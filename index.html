@@ -324,25 +324,35 @@
             inset: 0;
             z-index: 5;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-        .logo-tap-inner {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            border: 1.5px dashed rgba(0,122,255,0.3);
-            border-radius: 12px;
-            padding: 10px 16px;
-            background: rgba(0,122,255,0.04);
-            transition: all 0.18s;
+        .logo-tap-pip {
+            position: absolute;
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: rgba(0,122,255,0.11);
+            border: 1.5px solid rgba(0,122,255,0.28);
+            display: flex; align-items: center; justify-content: center;
+            transform: translate(-50%, -50%);
+            transition: background 0.15s, transform 0.15s;
+            animation: tapPulse 2.4s ease-out infinite;
         }
-        .logo-tap-overlay:active .logo-tap-inner { background: rgba(0,122,255,0.1); transform: scale(0.96); }
-        .logo-tap-plus { font-size: 20px; line-height: 1; color: rgba(0,122,255,0.55); font-weight: 300; }
-        .logo-tap-text { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(0,122,255,0.55); }
+        /* Position cœur pour l'avant */
+        .logo-tap-front .logo-tap-pip { left: 37%; top: 33%; }
+        /* Centre pour l'arrière */
+        .logo-tap-back  .logo-tap-pip { left: 50%; top: 33%; }
+
+        .logo-tap-overlay:active .logo-tap-pip {
+            background: rgba(0,122,255,0.22);
+            transform: translate(-50%, -50%) scale(0.88);
+            animation: none;
+        }
         .logo-tap-overlay.gone { display: none; }
+
+        @keyframes tapPulse {
+            0%   { box-shadow: 0 0 0 0 rgba(0,122,255,0.22); }
+            60%  { box-shadow: 0 0 0 9px rgba(0,122,255,0); }
+            100% { box-shadow: 0 0 0 0 rgba(0,122,255,0); }
+        }
 
         /* ═══════════════════════════════════
            FLOAT BAR (barre flottante logo)
@@ -858,14 +868,13 @@
                     <p class="shirt-side-label">Avant</p>
                     <div class="svg-view" id="svgViewFront">
                         <div class="svg-box" id="svgBoxFront"></div>
-                        <div class="logo-tap-overlay" id="logoTapFront">
-                            <div class="logo-tap-inner">
-                                <div class="logo-tap-plus">+</div>
-                                <div class="logo-tap-text">Logo</div>
+                        <div class="logo-tap-overlay logo-tap-front" id="logoTapFront">
+                            <div class="logo-tap-pip">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
                             </div>
                         </div>
                         <div class="logo-zone empty" id="logoZoneFront" data-side="front"
-                             style="left:50%;top:42%;width:24%;height:17%;">
+                             style="left:37%;top:33%;width:24%;height:17%;">
                             <div class="logo-inner" id="logoInnerFront"></div>
                             <div class="logo-frame"></div>
                         </div>
@@ -877,14 +886,13 @@
                     <p class="shirt-side-label">Arrière</p>
                     <div class="svg-view" id="svgViewBack">
                         <div class="svg-box" id="svgBoxBack"></div>
-                        <div class="logo-tap-overlay" id="logoTapBack">
-                            <div class="logo-tap-inner">
-                                <div class="logo-tap-plus">+</div>
-                                <div class="logo-tap-text">Logo</div>
+                        <div class="logo-tap-overlay logo-tap-back" id="logoTapBack">
+                            <div class="logo-tap-pip">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
                             </div>
                         </div>
                         <div class="logo-zone empty" id="logoZoneBack" data-side="back"
-                             style="left:50%;top:42%;width:24%;height:17%;">
+                             style="left:50%;top:33%;width:24%;height:17%;">
                             <div class="logo-inner" id="logoInnerBack"></div>
                             <div class="logo-frame"></div>
                         </div>
@@ -1101,8 +1109,8 @@ let svgB  = null;
 
 /* Per-side logo state (J: Logo Avant, K: Logo Arriere) — logoColor per side */
 const logos = {
-    front: { data: null, x: 50, y: 42, w: 24, h: 17, logoColor: '#1A1A1A' },
-    back:  { data: null, x: 50, y: 42, w: 24, h: 17, logoColor: '#1A1A1A' }
+    front: { data: null, x: 37, y: 33, w: 24, h: 17, logoColor: '#1A1A1A' },
+    back:  { data: null, x: 50, y: 33, w: 24, h: 17, logoColor: '#1A1A1A' }
 };
 function cl() { return logos[side]; }
 
@@ -1697,7 +1705,8 @@ window.onUpload = function(e) {
         document.getElementById('upThumb').src = ev.target.result;
         document.getElementById('upName').textContent = f.name;
         document.getElementById('upPill').classList.add('show');
-        cur.x = 50; cur.y = 42; cur.w = 24; cur.h = 17;
+        cur.x = side === 'front' ? 37 : 50;
+        cur.y = 33; cur.w = 24; cur.h = 17;
         renderLogo();
         closeLogoSheet();
     };
@@ -1766,7 +1775,8 @@ function buildSheetLogoGrid() {
             thumb.appendChild(nameEl);
             thumb.addEventListener('click', () => {
                 cur.data = { type: 'atelier', id: l.id, s: l.s };
-                cur.x = 50; cur.y = 42; cur.w = 24; cur.h = 17;
+                cur.x = _sheetSide === 'front' ? 37 : 50;
+                cur.y = 33; cur.w = 24; cur.h = 17;
                 renderLogo();
                 updateSheetColorSection();
                 buildSheetLogoGrid();
