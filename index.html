@@ -2356,8 +2356,12 @@ window.submit = async function() {
     if (mockupFront) ficheComplete.mockupFront = mockupFront;
     if (mockupBack)  ficheComplete.mockupBack  = mockupBack;
 
+    /* ── Lien fiche encodé pour Google Sheets (ouvre directement la fiche dans le dashboard) ── */
+    var _ficheLight = JSON.parse(JSON.stringify(ficheBase));   /* sans mockups = URL courte */
+    var _ficheEncoded = btoa(unescape(encodeURIComponent(JSON.stringify(_ficheLight))));
+    payload.fiche = DASHBOARD_URL + '/ficheatelier-index.html#' + _ficheEncoded;
+
     /* ── Envoi Google Sheets (best-effort, non-bloquant) ── */
-    payload.fiche = DASHBOARD_URL;
     fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(() => {});
 
     /* ── Sauvegarde fiche dans localStorage (même domaine = même dashboard) ── */
