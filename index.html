@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Studio Olda</title>
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
@@ -40,6 +40,22 @@
         input, select, textarea { -webkit-appearance: none; -moz-appearance: none; appearance: none; border-radius: 0; }
         input[type="date"] { -webkit-appearance: none; appearance: none; color: #111827; }
         input[type="date"]::-webkit-date-and-time-value { text-align: left; color: #111827; }
+
+        /* ── Touch optimisation (supprime délai 300ms sur iOS/Android/Samsung) ── */
+        button, a, label[for],
+        .aselect-trigger, .aselect-opt, .seg-btn, .swatch,
+        .pay-opt, .lsheet-close-btn, .fbar-btn, .shirt-col,
+        .logo-tap-overlay, .lsheet-upload-row, .sf-btn-primary, .sf-btn-secondary {
+            touch-action: manipulation;
+        }
+        /* ── Overscroll (empêche le scroll parent de se déclencher sur Android) ── */
+        .aselect-dropdown, .lsheet-scroll { overscroll-behavior: contain; }
+
+        /* ── Hover uniquement sur vrais pointeurs (évite états bloqués sur tactile) ── */
+        @media (hover: none) {
+            .aselect-opt:hover, .aselect-trigger:hover,
+            .seg-btn:hover, .swatch:hover, .pay-opt:hover { background: unset; }
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -147,7 +163,7 @@
             font-family: inherit;
         }
         .aselect-opt:active { background: rgba(0,122,255,0.08); }
-        .aselect-opt:hover { background: var(--bg); }
+        @media (hover: hover) { .aselect-opt:hover { background: var(--bg); } }
         .aselect-opt + .aselect-opt { border-top: 0.5px solid var(--border); }
         .aselect-opt.on { color: var(--accent); font-weight: 600; }
         .aselect-opt.on::after {
@@ -458,6 +474,8 @@
             transform: translateY(100%);
             transition: transform 0.44s cubic-bezier(0.32, 0.72, 0, 1);
             max-height: 78vh;
+            max-height: 78dvh; /* dynamic viewport height — exclut la barre navigateur iOS/Samsung */
+            padding-bottom: env(safe-area-inset-bottom, 0px); /* home indicator iPhone */
             display: flex;
             flex-direction: column;
             box-shadow: 0 -1px 0 rgba(0,0,0,0.05), 0 -8px 40px rgba(0,0,0,0.12);
@@ -783,11 +801,22 @@
         .s1-btn:hover { background: #1D4ED8; }
         .s1-btn:active { transform: scale(0.95); }
 
+        /* ── H1 responsive — évite débordement sur petits écrans (iPhone SE, Galaxy A) ── */
+        #hTitle { font-size: clamp(24px, 8vw, 34px); }
+
         /* ═══════════════════════════════════
-           RESPONSIVE
+           RESPONSIVE — desktop / tablette
            ═══════════════════════════════════ */
+        @media (min-width: 600px) {
+            body { background: #EBEBF0; }
+            .max-w-lg { padding-top: 32px; }
+            .card, .stage, #s1 > div {
+                box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.03);
+            }
+            #successCard { padding: 52px 44px 40px; }
+        }
         @media (min-width: 768px) {
-            /* svg-view sizing now via aspect-ratio, no override needed */
+            .shirts-grid { gap: 20px; }
         }
 
         ::-webkit-scrollbar { width: 0; }
@@ -817,10 +846,12 @@
             background: rgba(0,0,0,.52);
             backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
             animation: sfOverlayIn .22s ease;
+            padding: env(safe-area-inset-top,0px) env(safe-area-inset-right,0px)
+                     env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
         }
         #successCard {
             background: #fff; border-radius: 28px;
-            padding: 48px 36px 36px; width: min(370px, 92vw);
+            padding: 40px 32px 32px; width: min(370px, calc(100vw - 40px));
             text-align: center;
             box-shadow: 0 48px 120px rgba(0,0,0,.38);
             animation: sfCardIn .42s cubic-bezier(.34,1.44,.64,1);
