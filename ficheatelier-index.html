@@ -755,18 +755,30 @@ window.goToDashboard = function() {
 /* ══════════════════════════════════════
    FICHE DISPLAY
    ══════════════════════════════════════ */
+var _inIframe = (window.self !== window.top);
+
 function showFiche(encoded) {
     try {
         var json = decodeURIComponent(escape(atob(encoded)));
         var f = JSON.parse(json);
     } catch(e) {
         console.error('Decode error:', e);
-        showDashboard();
+        if (!_inIframe) showDashboard();
         return;
     }
 
     /* Save fiche to localStorage */
-    saveFiche(f);
+    var key = saveFiche(f);
+
+    /* Si on est dans un iframe caché, ne pas toucher à l'UI,
+       juste confirmer la sauvegarde au parent */
+    if (_inIframe) {
+        try {
+            window.parent.postMessage({ type: 'olda-fiche-saved', key: key }, '*');
+        } catch(e) {}
+        return;
+    }
+
     ficheViewKey = f.commande || '';
 
     document.getElementById('dashboardView').style.display = 'none';
@@ -1197,6 +1209,25 @@ window.voirFiche = function(key) {
     fermerOverlay();
     showFicheFromStorage(key);
 };
+
+/* ══════════════════════════════════════
+   POSTMESSAGE — sauvegarde fiche depuis iframe parent
+   (mécanisme le plus fiable en cross-origin)
+   ══════════════════════════════════════ */
+window.addEventListener('message', function(e) {
+    if (!e.data || e.data.type !== 'olda-save-fiche') return;
+    try {
+        var f = e.data.fiche;
+        if (!f || !f.commande) return;
+        var key = saveFiche(f);
+        /* Confirmer la sauvegarde au parent */
+        if (e.source) {
+            e.source.postMessage({ type: 'olda-fiche-saved', key: key }, '*');
+        }
+    } catch(err) {
+        console.error('postMessage save error:', err);
+    }
+});
 
 /* ── Init ── */
 route();

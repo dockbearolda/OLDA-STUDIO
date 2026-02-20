@@ -2281,8 +2281,10 @@ window.submit = async function() {
     /* ── Envoi Google Sheets (best-effort, non-bloquant) ── */
     fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(() => {});
 
-    /* ── Sauvegarde fiche dans ficheatelier (double mécanisme) ── */
-    /* 1. localStorage direct (si même domaine que ficheatelier.pages.dev) */
+    /* ── Sauvegarde fiche OBLIGATOIRE dans ficheatelier (triple mécanisme) ── */
+    var ficheSaved = false;
+
+    /* Mécanisme 1 : localStorage direct (si même domaine) */
     try {
         var _fiches = JSON.parse(localStorage.getItem('olda_fiches') || '{}');
         var _key = ficheComplete.commande || ('cmd-' + Date.now());
@@ -2291,17 +2293,59 @@ window.submit = async function() {
         else { _f.status = 'en-attente'; }
         _fiches[_key] = _f;
         localStorage.setItem('olda_fiches', JSON.stringify(_fiches));
+        ficheSaved = true;
     } catch(e) {}
-    /* 2. Iframe caché pointant vers ficheatelier-index.html avec le hash
-          → showFiche() est appelé, ce qui déclenche saveFiche() dans le
-            contexte de ficheatelier.pages.dev (garantit la bonne origine) */
-    (function() {
+
+    /* Mécanisme 2 + 3 : Iframe caché + postMessage
+       L'iframe charge ficheatelier-index.html (hash = fiche encodée)
+       → route() appelle showFiche() qui sauvegarde dans le bon origin
+       + postMessage envoie les données directement après chargement */
+    await new Promise(function(resolve) {
+        var timeout = setTimeout(function() { resolve(); }, 5000);
+
+        /* Écouter la confirmation de sauvegarde du dashboard */
+        function onSaveConfirm(evt) {
+            if (evt.data && evt.data.type === 'olda-fiche-saved') {
+                ficheSaved = true;
+                window.removeEventListener('message', onSaveConfirm);
+                clearTimeout(timeout);
+                resolve();
+            }
+        }
+        window.addEventListener('message', onSaveConfirm);
+
         var fr = document.getElementById('ficheSaveFrame');
-        if (!fr) { fr = document.createElement('iframe'); fr.id = 'ficheSaveFrame';
+        if (!fr) {
+            fr = document.createElement('iframe');
+            fr.id = 'ficheSaveFrame';
             fr.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;';
-            document.body.appendChild(fr); }
+            document.body.appendChild(fr);
+        }
+        /* Quand l'iframe est chargé, envoyer aussi via postMessage */
+        fr.onload = function() {
+            try {
+                fr.contentWindow.postMessage({
+                    type: 'olda-save-fiche',
+                    fiche: ficheComplete
+                }, '*');
+            } catch(e) {}
+        };
         fr.src = ficheFullURL;
-    })();
+    });
+
+    /* Vérification obligatoire : la fiche DOIT être créée */
+    if (!ficheSaved) {
+        /* Dernière tentative : forcer localStorage direct */
+        try {
+            var _f2 = JSON.parse(localStorage.getItem('olda_fiches') || '{}');
+            var _k2 = ficheComplete.commande || ('cmd-' + Date.now());
+            var _d2 = JSON.parse(JSON.stringify(ficheComplete));
+            _d2.status = (_f2[_k2] && _f2[_k2].status) || 'en-attente';
+            _f2[_k2] = _d2;
+            localStorage.setItem('olda_fiches', JSON.stringify(_f2));
+            ficheSaved = true;
+        } catch(e) {}
+    }
 
     /* ── Bouton fiche (lien complet avec mockups) ── */
     const ficheLink = document.getElementById('sfFicheBtn');
