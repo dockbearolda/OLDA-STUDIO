@@ -934,7 +934,7 @@
                     <span class="w-24 shrink-0 text-[12px] font-black text-gray-300 uppercase tracking-[0.18em]">NOM</span>
                     <input type="text" id="clientNom"
                            class="flex-1 min-w-0 p-0 bg-transparent text-[17px] font-semibold text-gray-900 tracking-tight placeholder:text-gray-300 placeholder:font-normal outline-none border-0 focus:ring-0"
-                           placeholder="Dubois" autocomplete="family-name">
+                           placeholder="Dubois" autocomplete="family-name" autocapitalize="words">
                 </div>
 
                 <!-- PRÉNOM — une ligne -->
@@ -942,7 +942,7 @@
                     <span class="w-24 shrink-0 text-[12px] font-black text-gray-300 uppercase tracking-[0.18em]">PRÉNOM</span>
                     <input type="text" id="clientPrenom"
                            class="flex-1 min-w-0 p-0 bg-transparent text-[17px] font-semibold text-gray-900 tracking-tight placeholder:text-gray-300 placeholder:font-normal outline-none border-0 focus:ring-0"
-                           placeholder="Pierre" autocomplete="given-name">
+                           placeholder="Pierre" autocomplete="given-name" autocapitalize="words">
                 </div>
 
                 <!-- TEL — une ligne -->
@@ -1607,10 +1607,11 @@ function updateSerial() {
     const yy = String(d.getFullYear()).slice(-2);
     const hh = String(d.getHours()).padStart(2,'0');
     const mi = String(d.getMinutes()).padStart(2,'0');
-    const nom    = (document.getElementById('clientNom').value    || '').trim().replace(/\s+/g,'-');
-    const prenom = (document.getElementById('clientPrenom').value || '').trim().replace(/\s+/g,'-');
+    const cap = s => s ? s.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase()) : '';
+    const nom    = cap((document.getElementById('clientNom').value    || '').trim()).replace(/\s+/g,'-');
+    const prenom = cap((document.getElementById('clientPrenom').value || '').trim()).replace(/\s+/g,'-');
     const namePart = nom && prenom ? `${nom}-${prenom}` : nom || prenom || '…';
-    document.getElementById('orderNo').textContent = `${dd}${mm}${yy}-${hh}${mi}-${namePart}`;
+    document.getElementById('orderNo').textContent = `${namePart}-${dd}${mm}${yy}-${hh}${mi}`;
 }
 
 /* ══════════════════════════════════════
@@ -2212,8 +2213,9 @@ window.submit = function() {
     const payload = {
         commande          : document.getElementById('orderNo').textContent.trim(),
         date              : document.getElementById('orderDate').textContent.trim(),
-        nom               : (document.getElementById('clientNom').value.trim() + ' ' +
-                             document.getElementById('clientPrenom').value.trim()).trim(),
+        nom               : ((s => s.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase()))(
+                             (document.getElementById('clientNom').value.trim() + ' ' +
+                              document.getElementById('clientPrenom').value.trim()).trim())),
         telephone         : tel.trim(),
         collection        : collVal || '',
         reference         : refVal  || '',
