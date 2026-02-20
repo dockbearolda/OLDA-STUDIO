@@ -125,6 +125,27 @@
             letter-spacing: -0.022em;
         }
         .aselect-trigger.placeholder { color: var(--text-3); }
+
+        /* ── Logo inputs (modifiables manuellement) ── */
+        .logo-input {
+            background: var(--bg);
+            border: 1.5px solid transparent;
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            font-size: 16px;
+            color: var(--text-1);
+            font-family: inherit;
+            letter-spacing: -0.022em;
+            width: 100%;
+            display: block;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .logo-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3.5px rgba(0,122,255,0.12);
+        }
+        .logo-input::placeholder { color: var(--text-3); }
         .aselect.open .aselect-trigger { border-color: var(--accent); box-shadow: 0 0 0 3.5px rgba(0,122,255,0.12); }
 
         .aselect-chevron {
@@ -1193,14 +1214,8 @@
 
         </div><!-- /stage -->
 
-        <!-- Couleur T-shirt — menu déroulant -->
-        <div class="card p-5 mt-3">
-            <label class="label ml-1 mb-2 block">Couleur T-shirt</label>
-            <div class="aselect" id="colorSelect"></div>
-        </div>
-
         <!-- Collection -->
-        <div class="card p-5">
+        <div class="card p-5 mt-3">
             <label class="label ml-1 mb-2 block">Collection</label>
             <div class="aselect" id="selCollection"></div>
         </div>
@@ -1209,6 +1224,24 @@
         <div class="card p-5">
             <label class="label ml-1 mb-2 block">Reference</label>
             <div class="aselect" id="selRef"></div>
+        </div>
+
+        <!-- Logo Avant -->
+        <div class="card p-5">
+            <label class="label ml-1 mb-2 block">Logo Avant</label>
+            <input type="text" id="logoAvantInput" class="logo-input" placeholder="Aucun">
+        </div>
+
+        <!-- Logo Arrière -->
+        <div class="card p-5">
+            <label class="label ml-1 mb-2 block">Logo Arrière</label>
+            <input type="text" id="logoArriereInput" class="logo-input" placeholder="Aucun">
+        </div>
+
+        <!-- Couleur T-shirt — menu déroulant -->
+        <div class="card p-5">
+            <label class="label ml-1 mb-2 block">Couleur T-shirt</label>
+            <div class="aselect" id="colorSelect"></div>
         </div>
 
         <!-- Taille -->
@@ -1884,12 +1917,26 @@ function renderLogoForSide(s) {
 }
 
 /* renderLogo — appelé pour rafraîchir les deux côtés */
+function updateLogoInputs() {
+    const av = document.getElementById('logoAvantInput');
+    const ar = document.getElementById('logoArriereInput');
+    if (av) {
+        const fd = logos.front.data;
+        av.value = fd ? (fd.n || fd.name || fd.id || '') : '';
+    }
+    if (ar) {
+        const bd = logos.back.data;
+        ar.value = bd ? (bd.n || bd.name || bd.id || '') : '';
+    }
+}
+
 function renderLogo() {
     renderLogoForSide('front');
     renderLogoForSide('back');
     updateFloatBar();
     updateTapOverlays();
     updateLogoMmDisplay();
+    updateLogoInputs();
 }
 
 function updateLogoPositionForSide(s) {
@@ -2236,9 +2283,9 @@ function buildSheetLogoGrid() {
             thumb.appendChild(nameEl);
             thumb.addEventListener('click', () => {
                 if (l.url) {
-                    cur.data = { type: 'custom', id: l.id, url: l.url, name: l.n };
+                    cur.data = { type: 'custom', id: l.id, url: l.url, name: l.n, n: l.n };
                 } else {
-                    cur.data = { type: 'atelier', id: l.id, s: l.s };
+                    cur.data = { type: 'atelier', id: l.id, s: l.s, n: l.n };
                 }
                 if (_sheetSide === 'back' && l.back) {
                     cur.x = l.back.x; cur.y = l.back.y;
@@ -2481,8 +2528,10 @@ window.submit = async function() {
                             ? logoColorName(logos.front.logoColor, LOGO_COLORS) : '',
         couleurLogoArriere: logos.back.data  && logos.back.data.type  === 'atelier'
                             ? logoColorName(logos.back.logoColor,  LOGO_COLORS) : '',
-        logoAvant         : logos.front.data ? (logos.front.data.type === 'atelier' ? logos.front.data.id : 'Custom') : '',
-        logoArriere       : logos.back.data  ? (logos.back.data.type  === 'atelier' ? logos.back.data.id  : 'Custom') : '',
+        logoAvant         : (document.getElementById('logoAvantInput')?.value.trim()) ||
+                            (logos.front.data ? (logos.front.data.type === 'atelier' ? logos.front.data.id : 'Custom') : ''),
+        logoArriere       : (document.getElementById('logoArriereInput')?.value.trim()) ||
+                            (logos.back.data  ? (logos.back.data.type  === 'atelier' ? logos.back.data.id  : 'Custom') : ''),
         note              : (document.getElementById('note').value || '').trim(),
         prixTshirt        : (selects['selPrice']  && selects['selPrice'].value)  || '0',
         personnalisation  : (selects['selPerso']  && selects['selPerso'].value)  || '0',
