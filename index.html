@@ -891,6 +891,100 @@
         .shirt-col:hover .svg-view {
             transform: scale(1.06);
         }
+
+        /* ═══════════════════════════════════
+           STEP 0 — SÉLECTION DE FAMILLE
+           ═══════════════════════════════════ */
+        .family-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .family-card {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 22px 20px;
+            background: white;
+            border-radius: 20px;
+            border: 2px solid transparent;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05), 0 0 0 0.5px rgba(0,0,0,0.03);
+            touch-action: manipulation;
+        }
+
+        .family-card.available {
+            cursor: pointer;
+        }
+        .family-card.available:active {
+            transform: scale(0.97);
+            border-color: var(--accent);
+        }
+        @media (hover: hover) {
+            .family-card.available:hover {
+                border-color: var(--accent);
+                box-shadow: 0 6px 20px rgba(0,122,255,0.12), 0 0 0 0.5px rgba(0,0,0,0.03);
+                transform: translateY(-1px);
+            }
+        }
+
+        .family-card.locked {
+            opacity: 0.42;
+            cursor: default;
+        }
+
+        .family-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .family-card.available .family-icon {
+            background: rgba(0,122,255,0.08);
+        }
+        .family-card.locked .family-icon {
+            background: rgba(0,0,0,0.05);
+        }
+
+        .family-info { flex: 1; min-width: 0; }
+        .family-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-1);
+            letter-spacing: -0.03em;
+        }
+        .family-desc {
+            font-size: 13px;
+            color: var(--text-2);
+            margin-top: 2px;
+            letter-spacing: -0.01em;
+        }
+
+        .family-badge-soon {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            background: rgba(0,0,0,0.06);
+            color: var(--text-2);
+            padding: 5px 10px;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+
+        .family-chevron { color: var(--text-3); flex-shrink: 0; }
+
+        /* Intro tagline Step 0 */
+        .family-intro {
+            font-size: 15px;
+            color: var(--text-2);
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+        }
     </style>
 </head>
 <body>
@@ -901,19 +995,76 @@
          HEADER
          ════════════════════════════════════════ -->
     <header class="mb-4">
-        <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.2em]" id="hLabel">Etape 1 sur 3</p>
-        <h1 class="text-[34px] font-black tracking-tight text-gray-900 leading-tight mt-1" id="hTitle">Client</h1>
-        <span id="hNum" class="hidden">1</span>
-        <div class="mt-5 h-[2px] bg-gray-200 rounded-full overflow-hidden">
-            <div class="h-full bg-blue-600 rounded-full transition-all duration-500" id="hBar" style="width:33.33%"></div>
+        <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.2em]" id="hLabel">Famille de produit</p>
+        <h1 class="text-[34px] font-black tracking-tight text-gray-900 leading-tight mt-1" id="hTitle">Studio Olda</h1>
+        <span id="hNum" class="hidden">0</span>
+        <div class="mt-5 h-[2px] bg-gray-200 rounded-full overflow-hidden" id="hProgressWrap">
+            <div class="h-full bg-blue-600 rounded-full transition-all duration-500" id="hBar" style="width:0%"></div>
         </div>
     </header>
+
+    <!-- ════════════════════════════════════════
+         STEP 0 — SÉLECTION DE FAMILLE
+         ════════════════════════════════════════ -->
+    <div id="s0" class="step active mt-8">
+        <p class="family-intro">Quel type de produit souhaitez-vous personnaliser ?</p>
+        <div class="family-grid">
+
+            <!-- Textile — disponible -->
+            <div class="family-card available" onclick="selectFamily('textile')">
+                <div class="family-icon">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/>
+                    </svg>
+                </div>
+                <div class="family-info">
+                    <div class="family-name">Textile</div>
+                    <div class="family-desc">T-shirts, polos, sweats…</div>
+                </div>
+                <svg class="family-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+
+            <!-- Mug — prochainement -->
+            <div class="family-card locked">
+                <div class="family-icon">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#86868B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 8h1a4 4 0 1 1 0 8h-1"/>
+                        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/>
+                        <line x1="6" y1="2" x2="6" y2="4"/>
+                        <line x1="10" y1="2" x2="10" y2="4"/>
+                        <line x1="14" y1="2" x2="14" y2="4"/>
+                    </svg>
+                </div>
+                <div class="family-info">
+                    <div class="family-name">Mug</div>
+                    <div class="family-desc">Mugs personnalisés</div>
+                </div>
+                <span class="family-badge-soon">Bientôt</span>
+            </div>
+
+            <!-- Accessoires — prochainement -->
+            <div class="family-card locked">
+                <div class="family-icon">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#86868B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/>
+                    </svg>
+                </div>
+                <div class="family-info">
+                    <div class="family-name">Accessoires</div>
+                    <div class="family-desc">Casquettes, tote bags…</div>
+                </div>
+                <span class="family-badge-soon">Bientôt</span>
+            </div>
+
+        </div>
+    </div>
 
     <!-- ════════════════════════════════════════
          STEP 1 — CLIENT  (A: Commande, B: Date, C: Nom, D: Telephone)
          Single-line iCloud/Apple Business style
          ════════════════════════════════════════ -->
-    <div id="s1" class="step active mt-8">
+    <div id="s1" class="step mt-8">
         <div class="bg-white rounded-[32px] px-7 pt-7 pb-7" style="box-shadow:0 2px 16px rgba(0,0,0,0.04);">
             <div class="divide-y divide-gray-100">
 
@@ -1588,13 +1739,28 @@ document.addEventListener('DOMContentLoaded', async () => {
    ══════════════════════════════════════ */
 const TITLES = ['Client','Studio','Paiement'];
 
+window.selectFamily = function(family) {
+    go(1);
+};
+
 window.go = function(n) {
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById('s'+n).classList.add('active');
-    document.getElementById('hTitle').textContent = TITLES[n-1];
-    document.getElementById('hLabel').textContent = `Etape ${n} sur 3`;
-    document.getElementById('hNum').textContent = n;
-    document.getElementById('hBar').style.width = (n/3*100)+'%';
+
+    const progressWrap = document.getElementById('hProgressWrap');
+    if (n === 0) {
+        document.getElementById('hTitle').textContent = 'Studio Olda';
+        document.getElementById('hLabel').textContent = 'Famille de produit';
+        document.getElementById('hNum').textContent = 0;
+        document.getElementById('hBar').style.width = '0%';
+        progressWrap.style.visibility = 'hidden';
+    } else {
+        progressWrap.style.visibility = 'visible';
+        document.getElementById('hTitle').textContent = TITLES[n-1];
+        document.getElementById('hLabel').textContent = `Etape ${n} sur 3`;
+        document.getElementById('hNum').textContent = n;
+        document.getElementById('hBar').style.width = (n/3*100)+'%';
+    }
     if (n === 2) updateSerial();
     window.scrollTo({top:0,behavior:'smooth'});
 };
