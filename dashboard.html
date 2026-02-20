@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            background: #f2f2f7;
+            min-height: 100vh;
+            padding: 48px 24px 64px;
+            color: #1c1c1e;
+        }
+
+        /* ── En-tête ── */
+        header {
+            max-width: 960px;
+            margin: 0 auto 36px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        header h1 {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #1c1c1e;
+        }
+
+        header p {
+            margin-top: 6px;
+            font-size: 15px;
+            color: #8e8e93;
+            font-weight: 400;
+        }
+
+        /* Badge total */
+        .badge-total {
+            background: #1c1c1e;
+            color: #fff;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            align-self: center;
+            white-space: nowrap;
+        }
+
+        /* Indicateur de sync */
+        .sync-status {
+            max-width: 960px;
+            margin: -20px auto 20px;
+            font-size: 12px;
+            color: #aeaeb2;
+            text-align: right;
+        }
+
+        .sync-status.erreur {
+            color: #ff3b30;
+        }
+
+        /* ── Grille catégories ── */
+        .grid {
+            max-width: 960px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px;
+        }
+
+        /* ── Carte ── */
+        .card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 22px 20px 20px;
+            border-top: 4px solid var(--accent);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            cursor: default;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            user-select: none;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
+        }
+
+        .card:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Compteur */
+        .card-count {
+            font-size: 40px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            color: #1c1c1e;
+            line-height: 1;
+            margin-bottom: 8px;
+            transition: opacity 0.2s;
+        }
+
+        .card-count.chargement {
+            opacity: 0.3;
+        }
+
+        /* Libellé */
+        .card-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #3c3c43;
+            line-height: 1.4;
+        }
+
+        /* ── Couleurs accent ── */
+        .c-orange  { --accent: #ff9500; }
+        .c-yellow  { --accent: #ffcc00; }
+        .c-purple  { --accent: #af52de; }
+        .c-red     { --accent: #ff3b30; }
+        .c-teal    { --accent: #5ac8fa; }
+        .c-blue    { --accent: #007aff; }
+        .c-green   { --accent: #34c759; }
+        .c-pink    { --accent: #ff2d55; }
+        .c-indigo  { --accent: #5856d6; }
+        .c-gray    { --accent: #8e8e93; }
+
+        /* ── Responsive ── */
+        @media (max-width: 480px) {
+            body { padding: 32px 16px 48px; }
+            header h1 { font-size: 28px; }
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .card { padding: 16px 14px 14px; }
+            .card-count { font-size: 32px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1>Catégories</h1>
+        <p>Vue d'ensemble des commandes</p>
+    </div>
+    <div class="badge-total" id="badge-total">— commandes</div>
+</header>
+
+<div class="sync-status" id="sync-status">Chargement…</div>
+
+<div class="grid">
+
+    <div class="card c-orange">
+        <div class="card-count chargement" id="stat-en_attente">—</div>
+        <div class="card-label">Commande en attente</div>
+    </div>
+
+    <div class="card c-yellow">
+        <div class="card-count chargement" id="stat-a_preparer">—</div>
+        <div class="card-label">Commande à préparer</div>
+    </div>
+
+    <div class="card c-purple">
+        <div class="card-count chargement" id="stat-maquette_a_faire">—</div>
+        <div class="card-label">Maquette à faire</div>
+    </div>
+
+    <div class="card c-red">
+        <div class="card-count chargement" id="stat-prt_a_faire">—</div>
+        <div class="card-label">PRT à faire</div>
+    </div>
+
+    <div class="card c-teal">
+        <div class="card-count chargement" id="stat-validation">—</div>
+        <div class="card-label">En attente de validation</div>
+    </div>
+
+    <div class="card c-blue">
+        <div class="card-count chargement" id="stat-impression">—</div>
+        <div class="card-label">En cours d'impression</div>
+    </div>
+
+    <div class="card c-green">
+        <div class="card-count chargement" id="stat-pressage">—</div>
+        <div class="card-label">Pressage à faire</div>
+    </div>
+
+    <div class="card c-pink">
+        <div class="card-count chargement" id="stat-client_a_contacter">—</div>
+        <div class="card-label">Client à contacter</div>
+    </div>
+
+    <div class="card c-indigo">
+        <div class="card-count chargement" id="stat-client_prevenu">—</div>
+        <div class="card-label">Client prévenu</div>
+    </div>
+
+    <div class="card c-gray">
+        <div class="card-count chargement" id="stat-archives">—</div>
+        <div class="card-label">Archives</div>
+    </div>
+
+</div>
+
+<script>
+    // Correspondance statut → id HTML
+    const STATS_IDS = [
+        'en_attente',
+        'a_preparer',
+        'maquette_a_faire',
+        'prt_a_faire',
+        'validation',
+        'impression',
+        'pressage',
+        'client_a_contacter',
+        'client_prevenu',
+        'archives'
+    ];
+
+    async function chargerStats() {
+        try {
+            const resp = await fetch('/api/stats');
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+
+            // Mettre à jour chaque compteur
+            STATS_IDS.forEach(statut => {
+                const el = document.getElementById('stat-' + statut);
+                if (el) {
+                    el.textContent = data.stats[statut] ?? 0;
+                    el.classList.remove('chargement');
+                }
+            });
+
+            // Mettre à jour le badge total
+            const badge = document.getElementById('badge-total');
+            badge.textContent = data.total + ' commande' + (data.total !== 1 ? 's' : '');
+
+            // Indicateur de sync
+            const sync = document.getElementById('sync-status');
+            const heure = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            sync.textContent = 'Mis à jour à ' + heure;
+            sync.classList.remove('erreur');
+
+        } catch (err) {
+            const sync = document.getElementById('sync-status');
+            sync.textContent = 'Erreur de connexion — nouvelle tentative dans 30 s';
+            sync.classList.add('erreur');
+        }
+    }
+
+    // Chargement immédiat puis toutes les 30 secondes
+    chargerStats();
+    setInterval(chargerStats, 30000);
+</script>
+
+</body>
+</html>
