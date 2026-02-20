@@ -38,6 +38,7 @@
 
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; }
         input, select, textarea { -webkit-appearance: none; -moz-appearance: none; appearance: none; border-radius: 0; }
+        input[type="date"] { -webkit-appearance: textfield; appearance: auto; color: #111827; min-height: 44px; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -395,6 +396,30 @@
             gap: 8px;
             animation: enterStep 0.2s ease;
         }
+        /* BIO badge — Apple-style */
+        .bio-badge {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #1a8a3c;
+            color: #fff;
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            padding: 4px 9px 4px 7px;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+            pointer-events: none;
+            z-index: 20;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.22s cubic-bezier(.4,0,.2,1), transform 0.22s cubic-bezier(.4,0,.2,1);
+        }
+        .bio-badge.visible { opacity: 1; transform: scale(1); }
+        .bio-badge svg { flex-shrink: 0; }
         .fbar-btn {
             padding: 5px 11px;
             border-radius: 9px;
@@ -939,6 +964,11 @@
                             <div class="logo-inner" id="logoInnerFront"></div>
                             <div class="logo-frame"></div>
                         </div>
+                        <!-- Badge BIO (Apple-style) — visible si référence BIO -->
+                        <div class="bio-badge" id="bioBadge">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20C19 20 22 3 22 3c-1 2-8 2-8 2z"/></svg>
+                            100% BIO
+                        </div>
                     </div>
                 </div>
 
@@ -1229,7 +1259,7 @@ const LOGO_COLORS = [
 
 /* ── Catalogue références ── */
 const REFERENCES = {
-    'H-001': { fournisseur: 'NS300', prix: 35, largeurs: { XS: 220, S: 250, M: 270, L: 300, XL: 320, XXL: 320 } },
+    'H-001': { fournisseur: 'NS300', desc: 'T-shirt Léger NATIVE SPIRIT NS300 100% CotonBIO', prix: 35, bio: true, largeurs: { XS: 220, S: 250, M: 270, L: 300, XL: 320, XXL: 320 } },
     'H-002': { fournisseur: 'NS300', prix: 39, largeurs: { XS: 220, S: 250, M: 270, L: 300, XL: 320, XXL: 320 } }
 };
 
@@ -1561,7 +1591,8 @@ window.buildRefs = function() {
         for (let i = 1; i <= 5; i++) {
             const code = prefix + '-' + String(i).padStart(3,'0');
             const refData = REFERENCES[code];
-            const label = refData ? `${code}  ·  ${refData.fournisseur}` : code;
+            const bioTag = refData && refData.bio ? '  🌿 BIO' : '';
+            const label = refData ? `${code}  ·  ${refData.fournisseur}${bioTag}` : code;
             opts.push({v: code, l: label});
         }
     }
@@ -1570,11 +1601,12 @@ window.buildRefs = function() {
     selects['selRef'].onChange = function(v) {
         const refData = REFERENCES[v];
         if (refData) {
-            document.getElementById('price').value = refData.prix;
             if (selects['selPrice']) selects['selPrice'].setValue(String(refData.prix));
             calcTotal();
         }
         updateLogoMmDisplay();
+        const bioBadge = document.getElementById('bioBadge');
+        if (bioBadge) { bioBadge.classList.toggle('visible', !!(refData && refData.bio)); }
     };
 };
 
