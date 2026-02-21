@@ -13,7 +13,7 @@ const CLIENT_ORIGIN   = process.env.CLIENT_ORIGIN  || 'https://oldastudio.up.rai
 
 /* ── Configuration DASHOLDA (transfert automatique des commandes) ── */
 const DASHOLDA_URL    = process.env.DASHOLDA_URL              || 'https://dasholda.up.railway.app';
-const DASHOLDA_SECRET = process.env.DASHOLDA_WEBHOOK_SECRET   || '';
+const DASHOLDA_SECRET = process.env.DASHOLDA_WEBHOOK_SECRET   || 'd1e9c4cd170eb57f8ce6254b5aa70b7f708e465d48daefc7f3b0b7e16bd9f4dc';
 
 /* ── Log en mémoire des envois échoués vers DASHOLDA ── */
 const failedForwards = [];
