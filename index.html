@@ -2274,70 +2274,66 @@ async function captureMockup(shirtSvg, sideData, fabricHex, W, H, Q) {
 }
 
 /* ══════════════════════════════════════
-   DASHBOARD — Création automatique de fiche
+   DASHBOARD — Envoi commande
    ══════════════════════════════════════ */
-
-/**
- * Envoie la commande + fiche complète vers le Dashboard OLDA.
- * Best-effort : une erreur réseau ne bloque pas le flux client.
- *
- * @param {Object} orderPayload  – payload commande
- * @param {Object} ficheData     – données complètes de la fiche (avec mockups si dispo)
- */
-async function sendOrderToDashboard(orderPayload, ficheData) {
-    var orderData = {
-        commande          : orderPayload.commande,
-        date              : orderPayload.date,
-        nom               : orderPayload.nom,
-        telephone         : orderPayload.telephone,
-        collection        : orderPayload.collection,
-        reference         : orderPayload.reference,
-        taille            : orderPayload.taille,
-        couleurTshirt     : orderPayload.couleurTshirt,
-        couleurTshirtHex  : orderPayload.couleurTshirtHex,
-        logoAvant         : orderPayload.logoAvant,
-        logoArriere       : orderPayload.logoArriere,
-        couleurLogoAvant  : orderPayload.couleurLogoAvant,
-        couleurLogoArriere: orderPayload.couleurLogoArriere,
-        note              : orderPayload.note,
-        famille           : orderPayload.famille || 'textile',
-        prix              : {
-            tshirt          : orderPayload.prixTshirt,
-            personnalisation: orderPayload.personnalisation,
-            total           : orderPayload.total
-        },
-        paiement          : { statut: orderPayload.paye },
-        source            : 'oldastudio',
-        timestamp         : new Date().toISOString()
-    };
-
-    try {
-        var response = await fetch(DASHBOARD_URL + '/api/orders', {
-            method : 'POST',
-            headers: {
-                'Content-Type' : 'application/json',
-                'Authorization': 'Bearer ' + DASHBOARD_TOKEN
-            },
-            body: JSON.stringify(orderData)
+async function sendOrderToDashboard(payload) {
+    // Nettoie un prix : "29,90 €" → 29.90
+    const parsePrice = v =>
+        parseFloat(String(v).replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+    const prixTshirt = parsePrice(payload.prixTshirt);
+    const prixPerso  = parsePrice(payload.personnalisation);
+    const total      = parsePrice(payload.total) || (prixTshirt + prixPerso);
+    // Articles
+    const items = [];
+    if (prixTshirt > 0) {
+        items.push({
+            name:     [payload.reference, payload.collection, payload.couleurTshirt, payload.taille]
+                        .filter(Boolean).join(' – '),
+            quantity: 1,
+            price:    prixTshirt,
         });
-
-        if (!response.ok) {
-            console.error('[OLDA Dashboard] Réponse non-OK — statut:', response.status, response.statusText);
-        } else {
-            console.info('[OLDA Dashboard] Fiche créée avec succès:', orderData.commande);
-        }
-    } catch (err) {
-        console.error('[OLDA Dashboard] Envoi échoué:', err.message);
-
-        /* Sauvegarde locale si le dashboard est inaccessible */
-        try {
-            var _pending = JSON.parse(localStorage.getItem('olda_pending_dashboard') || '[]');
-            _pending.push(Object.assign({}, orderData, { _failedAt: new Date().toISOString() }));
-            localStorage.setItem('olda_pending_dashboard', JSON.stringify(_pending));
-            console.warn('[OLDA Dashboard] Commande mise en file locale.');
-        } catch (storageErr) {
-            console.warn('[OLDA Dashboard] Impossible de sauvegarder localement:', storageErr.message);
-        }
+    }
+    if (prixPerso > 0) {
+        items.push({
+            name:     'Personnalisation',
+            quantity: 1,
+            price:    prixPerso,
+        });
+    }
+    if (items.length === 0) {
+        items.push({ name: 'Commande textile', quantity: 1, price: total });
+    }
+    // Notes : commentaire + date butoir
+    const deadline = document.getElementById('clientDeadline')?.value;
+    const noteParts = [payload.note, deadline ? `Butoir : ${deadline}` : '']
+        .filter(Boolean);
+    const body = {
+        orderNumber:   payload.commande,
+        customerName:  payload.nom,
+        customerEmail: `${String(payload.telephone).replace(/[\s.]/g, '')}@client.olda.fr`,
+        customerPhone: payload.telephone,
+        status:        'COMMANDE_EN_ATTENTE',
+        paymentStatus: payload.paye === 'oui' ? 'PAID' : 'PENDING',
+        total,
+        subtotal:      prixTshirt,
+        shipping:      0,
+        tax:           0,
+        currency:      'EUR',
+        notes:         noteParts.join(' | ') || null,
+        items,
+    };
+    try {
+        const res = await fetch(`${DASHBOARD_URL}/api/orders`, {
+            method:  'POST',
+            headers: {
+                'Content-Type':  'application/json',
+                'Authorization': `Bearer ${DASHBOARD_TOKEN}`,
+            },
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) console.warn('Dashboard OLDA erreur:', await res.json().catch(() => res.status));
+    } catch (e) {
+        console.error('Dashboard OLDA injoignable:', e);
     }
 }
 
@@ -2502,7 +2498,7 @@ window.submit = async function() {
     fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(() => {});
 
     /* ── Envoi Dashboard OLDA (dasholda.up.railway.app) ── */
-    sendOrderToDashboard(payload, ficheComplete);
+    sendOrderToDashboard(payload);
 
     /* ── Sauvegarde fiche dans localStorage (même domaine = même dashboard) ── */
     try {
