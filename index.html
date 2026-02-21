@@ -2457,6 +2457,79 @@ async function sendOrderToDashboard(orderPayload, ficheData) {
 }
 
 /* ══════════════════════════════════════
+   TRANSFERT AUTOMATIQUE → DASHOLDA
+   Relay serveur : /api/webhook/forward-to-dasholda
+   ══════════════════════════════════════ */
+
+/**
+ * Transfère la commande vers DASHOLDA via le relay serveur OLDA Studio.
+ * Best-effort : les erreurs réseau ne bloquent pas la validation client.
+ *
+ * @param {Object} orderPayload  – payload commande (format OLDA Studio)
+ * @param {Object} ficheData     – données de fiche (mockups si disponibles)
+ */
+async function sendOrderToDasholda(orderPayload, ficheData) {
+    var orderData = {
+        commande          : orderPayload.commande,
+        date              : orderPayload.date,
+        nom               : orderPayload.nom,
+        telephone         : orderPayload.telephone,
+        collection        : orderPayload.collection,
+        reference         : orderPayload.reference,
+        taille            : orderPayload.taille,
+        couleurTshirt     : orderPayload.couleurTshirt,
+        logoAvant         : orderPayload.logoAvant,
+        logoArriere       : orderPayload.logoArriere,
+        couleurLogoAvant  : orderPayload.couleurLogoAvant,
+        couleurLogoArriere: orderPayload.couleurLogoArriere,
+        note              : orderPayload.note,
+        famille           : orderPayload.famille || 'textile',
+        prix: {
+            tshirt          : orderPayload.prixTshirt,
+            personnalisation: orderPayload.personnalisation,
+            total           : orderPayload.total
+        },
+        paiement: { statut: orderPayload.paye }
+    };
+
+    /* Inclure les mockups si disponibles (imageUrl de l'article côté DASHOLDA) */
+    if (ficheData) {
+        orderData.fiche = {
+            mockupFront: ficheData.mockupFront || null,
+            mockupBack : ficheData.mockupBack  || null
+        };
+    }
+
+    try {
+        var response = await fetch('/api/webhook/forward-to-dasholda', {
+            method : 'POST',
+            headers: {
+                'Content-Type' : 'application/json',
+                'Authorization': 'Bearer ' + DASHBOARD_TOKEN
+            },
+            body: JSON.stringify(orderData)
+        });
+
+        if (!response.ok) {
+            var errBody = await response.json().catch(() => ({}));
+            console.error('[→DASHOLDA] Réponse non-OK — statut:', response.status, errBody.error || '');
+        } else {
+            var result = await response.json().catch(() => ({}));
+            console.info('[→DASHOLDA] Commande transmise :', orderData.commande, result.dasholadId ? '— id: ' + result.dasholadId : '');
+        }
+    } catch (err) {
+        console.error('[→DASHOLDA] Envoi échoué :', err.message);
+        /* Sauvegarde locale pour diagnostic */
+        try {
+            var _pending = JSON.parse(localStorage.getItem('olda_pending_dasholda') || '[]');
+            _pending.push(Object.assign({}, orderData, { _failedAt: new Date().toISOString() }));
+            localStorage.setItem('olda_pending_dasholda', JSON.stringify(_pending));
+            console.warn('[→DASHOLDA] Commande mise en file locale (olda_pending_dasholda).');
+        } catch (storageErr) { /* silencieux */ }
+    }
+}
+
+/* ══════════════════════════════════════
    SUBMIT  (A-Q payload)
    ══════════════════════════════════════ */
 window.submit = async function() {
@@ -2545,6 +2618,9 @@ window.submit = async function() {
 
     /* ── Envoi Dashboard OLDA (avec famille + mockups) ── */
     sendOrderToDashboard(payload, ficheComplete);
+
+    /* ── Transfert automatique vers DASHOLDA (relay serveur, best-effort) ── */
+    sendOrderToDasholda(payload, ficheComplete);
 
     /* ── Sauvegarde fiche dans localStorage (même domaine = même dashboard) ── */
     try {
