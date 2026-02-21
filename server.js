@@ -11,6 +11,13 @@ const IS_DASHBOARD    = process.env.SITE_MODE === 'dashboard';
 const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN || 'd1e9c4cd170eb57f8ce6254b5aa70b7f708e465d48daefc7f3b0b7e16bd9f4dc';
 const CLIENT_ORIGIN   = process.env.CLIENT_ORIGIN  || 'https://oldastudio.up.railway.app';
 
+/* ── Configuration DASHOLDA (transfert automatique des commandes) ── */
+const DASHOLDA_URL    = process.env.DASHOLDA_URL              || '';
+const DASHOLDA_SECRET = process.env.DASHOLDA_WEBHOOK_SECRET   || '';
+
+/* ── Log en mémoire des envois échoués vers DASHOLDA ── */
+const failedForwards = [];
+
 /* ── Stockage mémoire des commandes (dashboard uniquement) ── */
 const orders = new Map();
 
@@ -61,6 +68,127 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: '15mb' }));
+
+/* ══════════════════════════════════════════════════════════════
+   DASHOLDA — Mapping + Relay webhook
+   Convertit le format OLDA Studio → format attendu par DASHOLDA
+   ══════════════════════════════════════════════════════════════ */
+
+/**
+ * Transforme une commande OLDA Studio en payload DASHOLDA.
+ * DASHOLDA attend : orderNumber, customerName, customerEmail (requis),
+ * total, subtotal, items[] (non vide), paymentStatus, notes, currency.
+ */
+function mapToDasholda(order) {
+    const prix     = order.prix     || {};
+    const paiement = order.paiement || {};
+    const fiche    = order.fiche    || {};
+
+    const tshirtVal = parseFloat(prix.tshirt)           || 0;
+    const persoVal  = parseFloat(prix.personnalisation)  || 0;
+    const subtotal  = tshirtVal + persoVal;
+    const totalVal  = parseFloat(prix.total)             || subtotal;
+
+    /* E-mail synthétique — OLDA Studio ne collecte pas les adresses e-mail */
+    const emailSlug    = (order.commande || 'cmd').replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const customerEmail = `${emailSlug}@commandes.oldastudio.fr`;
+
+    /* Libellé de l'article */
+    const itemName = [order.collection, order.reference, order.taille ? `(${order.taille})` : '']
+        .filter(Boolean).join(' ') || 'T-shirt OLDA';
+
+    /* Notes enrichies */
+    const notes = [
+        order.note        || '',
+        order.famille     ? `Famille: ${order.famille}`           : '',
+        order.couleurTshirt ? `Couleur: ${order.couleurTshirt}`   : '',
+        order.logoAvant   ? `Logo avant: ${order.logoAvant}`      : '',
+        order.logoArriere ? `Logo arrière: ${order.logoArriere}`  : ''
+    ].filter(Boolean).join(' | ') || '';
+
+    return {
+        orderNumber   : order.commande   || '',
+        customerName  : order.nom        || '',
+        customerEmail,
+        customerPhone : order.telephone  || '',
+        paymentStatus : paiement.statut === 'OUI' ? 'PAID' : 'PENDING',
+        total         : totalVal,
+        subtotal,
+        shipping      : 0,
+        tax           : 0,
+        currency      : 'EUR',
+        notes,
+        items: [{
+            name    : itemName,
+            sku     : order.reference || '',
+            quantity: 1,
+            price   : subtotal || totalVal,
+            imageUrl: fiche.mockupFront || null
+        }]
+    };
+}
+
+/* POST /api/webhook/forward-to-dasholda
+   Reçoit une commande depuis index.html (auth Bearer),
+   la mappe au format DASHOLDA et la transmet via POST sécurisé. */
+app.post('/api/webhook/forward-to-dasholda', async (req, res) => {
+    const auth = req.headers['authorization'] || '';
+    if (auth !== 'Bearer ' + DASHBOARD_TOKEN) {
+        return res.status(401).json({ error: 'Non autorisé' });
+    }
+
+    const order = req.body;
+    if (!order || !order.commande) {
+        return res.status(400).json({ error: 'Données manquantes (champ commande requis)' });
+    }
+
+    if (!DASHOLDA_URL) {
+        console.warn('[→DASHOLDA] DASHOLDA_URL non configurée — transfert ignoré pour :', order.commande);
+        return res.status(503).json({ error: 'DASHOLDA_URL non configurée sur ce serveur' });
+    }
+
+    const payload = mapToDasholda(order);
+
+    try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (DASHOLDA_SECRET) headers['x-webhook-secret'] = DASHOLDA_SECRET;
+
+        const r = await fetch(DASHOLDA_URL + '/api/orders', {
+            method : 'POST',
+            headers,
+            body   : JSON.stringify(payload)
+        });
+
+        if (!r.ok) {
+            const txt = await r.text().catch(() => '');
+            throw new Error(`HTTP ${r.status} — ${txt.slice(0, 300)}`);
+        }
+
+        const data = await r.json();
+        console.log('[→DASHOLDA] OK :', order.commande, '— id:', data.id || '?');
+        res.status(201).json({ ok: true, commande: order.commande, dasholadId: data.id });
+
+    } catch (err) {
+        console.error('[→DASHOLDA] ERREUR pour', order.commande, '—', err.message);
+        failedForwards.push({
+            commande : order.commande,
+            payload,
+            erreur   : err.message,
+            tentéLe  : new Date().toISOString()
+        });
+        res.status(502).json({ ok: false, error: err.message });
+    }
+});
+
+/* GET /api/webhook/failed-forwards
+   Consulte la liste des transferts échoués (protégé par le même token). */
+app.get('/api/webhook/failed-forwards', (req, res) => {
+    const auth = req.headers['authorization'] || '';
+    if (auth !== 'Bearer ' + DASHBOARD_TOKEN) {
+        return res.status(401).json({ error: 'Non autorisé' });
+    }
+    res.json({ count: failedForwards.length, items: failedForwards });
+});
 
 /* ── Fichiers statiques ── */
 app.use(express.static(path.join(__dirname), {

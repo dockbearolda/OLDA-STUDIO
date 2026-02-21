@@ -1172,6 +1172,11 @@
                             <div class="logo-inner" id="logoInnerBack"></div>
                             <div class="logo-frame"></div>
                         </div>
+                        <!-- Badge BIO arrière — même position que l'avant -->
+                        <div class="bio-badge" id="bioBadgeBack">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20C19 20 22 3 22 3c-1 2-8 2-8 2z"/></svg>
+                            100% BIO
+                        </div>
                     </div>
                 </div>
 
@@ -1208,13 +1213,6 @@
             <label class="label ml-1 mb-2 block">Taille</label>
             <div class="aselect" id="selSize"></div>
         </div>
-
-        <!-- Taille DTF arrière -->
-        <div class="card p-5">
-            <label class="label ml-1 mb-2 block">Taille DTF arrière</label>
-            <div class="aselect" id="selTailleDtf"></div>
-        </div>
-
 
         <!-- Note -->
         <div class="card p-5">
@@ -1698,19 +1696,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('#selSize .aselect-trigger').textContent = 'S';
     document.querySelector('#selSize .aselect-trigger').classList.remove('placeholder');
 
-    // Taille DTF arrière
-    createSelect('selTailleDtf',
-        [
-            {v:'',     l:'Aucun'},
-            {v:'A5',   l:'A5 — 15×21 cm'},
-            {v:'A4',   l:'A4 — 21×30 cm'},
-            {v:'A3',   l:'A3 — 30×42 cm'},
-            {v:'A2',   l:'A2 — 42×59 cm'}
-        ],
-        'Taille DTF arrière',
-        () => {}
-    );
-
     // Couleur T-shirt — menu déroulant
     initColorSelect();
 
@@ -1831,8 +1816,11 @@ window.buildRefs = function() {
             calcTotal();
         }
         updateLogoMmDisplay();
+        const isBio = !!(refData && refData.bio);
         const bioBadge = document.getElementById('bioBadge');
-        if (bioBadge) { bioBadge.classList.toggle('visible', !!(refData && refData.bio)); }
+        if (bioBadge) { bioBadge.classList.toggle('visible', isBio); }
+        const bioBadgeBack = document.getElementById('bioBadgeBack');
+        if (bioBadgeBack) { bioBadgeBack.classList.toggle('visible', isBio); }
     };
 };
 
@@ -2450,6 +2438,79 @@ async function sendOrderToDashboard(orderPayload, ficheData) {
 }
 
 /* ══════════════════════════════════════
+   TRANSFERT AUTOMATIQUE → DASHOLDA
+   Relay serveur : /api/webhook/forward-to-dasholda
+   ══════════════════════════════════════ */
+
+/**
+ * Transfère la commande vers DASHOLDA via le relay serveur OLDA Studio.
+ * Best-effort : les erreurs réseau ne bloquent pas la validation client.
+ *
+ * @param {Object} orderPayload  – payload commande (format OLDA Studio)
+ * @param {Object} ficheData     – données de fiche (mockups si disponibles)
+ */
+async function sendOrderToDasholda(orderPayload, ficheData) {
+    var orderData = {
+        commande          : orderPayload.commande,
+        date              : orderPayload.date,
+        nom               : orderPayload.nom,
+        telephone         : orderPayload.telephone,
+        collection        : orderPayload.collection,
+        reference         : orderPayload.reference,
+        taille            : orderPayload.taille,
+        couleurTshirt     : orderPayload.couleurTshirt,
+        logoAvant         : orderPayload.logoAvant,
+        logoArriere       : orderPayload.logoArriere,
+        couleurLogoAvant  : orderPayload.couleurLogoAvant,
+        couleurLogoArriere: orderPayload.couleurLogoArriere,
+        note              : orderPayload.note,
+        famille           : orderPayload.famille || 'textile',
+        prix: {
+            tshirt          : orderPayload.prixTshirt,
+            personnalisation: orderPayload.personnalisation,
+            total           : orderPayload.total
+        },
+        paiement: { statut: orderPayload.paye }
+    };
+
+    /* Inclure les mockups si disponibles (imageUrl de l'article côté DASHOLDA) */
+    if (ficheData) {
+        orderData.fiche = {
+            mockupFront: ficheData.mockupFront || null,
+            mockupBack : ficheData.mockupBack  || null
+        };
+    }
+
+    try {
+        var response = await fetch('/api/webhook/forward-to-dasholda', {
+            method : 'POST',
+            headers: {
+                'Content-Type' : 'application/json',
+                'Authorization': 'Bearer ' + DASHBOARD_TOKEN
+            },
+            body: JSON.stringify(orderData)
+        });
+
+        if (!response.ok) {
+            var errBody = await response.json().catch(() => ({}));
+            console.error('[→DASHOLDA] Réponse non-OK — statut:', response.status, errBody.error || '');
+        } else {
+            var result = await response.json().catch(() => ({}));
+            console.info('[→DASHOLDA] Commande transmise :', orderData.commande, result.dasholadId ? '— id: ' + result.dasholadId : '');
+        }
+    } catch (err) {
+        console.error('[→DASHOLDA] Envoi échoué :', err.message);
+        /* Sauvegarde locale pour diagnostic */
+        try {
+            var _pending = JSON.parse(localStorage.getItem('olda_pending_dasholda') || '[]');
+            _pending.push(Object.assign({}, orderData, { _failedAt: new Date().toISOString() }));
+            localStorage.setItem('olda_pending_dasholda', JSON.stringify(_pending));
+            console.warn('[→DASHOLDA] Commande mise en file locale (olda_pending_dasholda).');
+        } catch (storageErr) { /* silencieux */ }
+    }
+}
+
+/* ══════════════════════════════════════
    SUBMIT  (A-Q payload)
    ══════════════════════════════════════ */
 window.submit = async function() {
@@ -2475,7 +2536,6 @@ window.submit = async function() {
         collection        : collVal || '',
         reference         : refVal  || '',
         taille            : sizeVal || '',
-        tailleDtf         : (selects['selTailleDtf'] && selects['selTailleDtf'].value) || '',
         couleurTshirt     : color.n,
         couleurTshirtHex  : color.h,
         couleurLogoAvant  : logos.front.data && logos.front.data.type === 'atelier'
@@ -2539,6 +2599,9 @@ window.submit = async function() {
 
     /* ── Envoi Dashboard OLDA (avec famille + mockups) ── */
     sendOrderToDashboard(payload, ficheComplete);
+
+    /* ── Transfert automatique vers DASHOLDA (relay serveur, best-effort) ── */
+    sendOrderToDasholda(payload, ficheComplete);
 
     /* ── Sauvegarde fiche dans localStorage (même domaine = même dashboard) ── */
     try {
