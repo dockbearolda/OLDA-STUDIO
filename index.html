@@ -38,7 +38,7 @@
 
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; }
         input, select, textarea { -webkit-appearance: none; -moz-appearance: none; appearance: none; border-radius: 0; }
-        input[type="date"] { -webkit-appearance: none; appearance: none; color: #111827; }
+        input[type="date"] { -webkit-appearance: none; appearance: none; display: block !important; min-height: 2.5rem; color: #111827; }
         input[type="date"]::-webkit-date-and-time-value { text-align: left; color: #111827; }
 
         /* ── Touch optimisation (supprime délai 300ms sur iOS/Android/Samsung) ── */
@@ -311,6 +311,7 @@
             display: flex; align-items: center; justify-content: center;
             z-index: 10;
             touch-action: none;
+            aspect-ratio: 1/1;
         }
         .logo-zone.empty { pointer-events: none; }
         .logo-zone.has-logo { cursor: move; }
@@ -1144,7 +1145,7 @@
                             </div>
                         </div>
                         <div class="logo-zone empty" id="logoZoneFront" data-side="front"
-                             style="left:66.5%;top:28%;width:18.9%;height:12.6%;">
+                             style="left:66.5%;top:28%;width:18.9%;">
                             <div class="logo-inner" id="logoInnerFront"></div>
                             <div class="logo-frame"></div>
                         </div>
@@ -1167,19 +1168,10 @@
                             </div>
                         </div>
                         <div class="logo-zone empty" id="logoZoneBack" data-side="back"
-                             style="left:47.9%;top:31%;width:67.2%;height:44.8%;">
+                             style="left:47.9%;top:31%;width:30%;">
                             <div class="logo-inner" id="logoInnerBack"></div>
                             <div class="logo-frame"></div>
                         </div>
-                    </div>
-                    <!-- Côte logo arrière — saisie manuelle (H-001 : auto) -->
-                    <div class="flex items-center justify-center gap-1 mt-1" onclick="event.stopPropagation()">
-                        <input type="text" inputmode="numeric" id="coteLogoAr"
-                               class="w-14 text-center text-[11px] font-bold bg-transparent outline-none"
-                               style="color:var(--accent);border-bottom:1.5px solid var(--accent);"
-                               placeholder="— mm"
-                               onclick="event.stopPropagation()">
-                        <span class="text-[11px] font-semibold" style="color:var(--accent)">mm</span>
                     </div>
                 </div>
 
@@ -1489,8 +1481,8 @@ let svgB  = null;
 
 /* Per-side logo state (J: Logo Avant, K: Logo Arriere) — logoColor per side */
 const logos = {
-    front: { data: null, x: 66.5, y: 28, w: 18.9, h: 12.6, logoColor: '#1A1A1A' },
-    back:  { data: null, x: 47.9, y: 31, w: 67.2, h: 44.8, logoColor: '#1A1A1A' }
+    front: { data: null, x: 66.5, y: 28, w: 18.9, logoColor: '#1A1A1A' },
+    back:  { data: null, x: 47.9, y: 31, w: 30,   logoColor: '#1A1A1A' }
 };
 function cl() { return logos[side]; }
 
@@ -1737,6 +1729,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Live ID update quand le nom ou le prénom changent
     document.getElementById('clientNom').addEventListener('input', updateSerial);
     document.getElementById('clientPrenom').addEventListener('input', updateSerial);
+    ['clientNom','clientPrenom'].forEach(id => {
+        document.getElementById(id).addEventListener('input', e => {
+            const p = e.target.selectionStart;
+            e.target.value = e.target.value.replace(/\b\w/g, l => l.toUpperCase());
+            e.target.setSelectionRange(p, p);
+        });
+    });
     updateSerial(); // génère l'ID dès l'ouverture
 
     // Close selects on outside click
@@ -1882,10 +1881,9 @@ function renderLogoForSide(s) {
     if (!zone || !inner) return;
 
     // Position toujours à jour
-    zone.style.left   = cur.x + '%';
-    zone.style.top    = cur.y + '%';
-    zone.style.width  = cur.w + '%';
-    zone.style.height = cur.h + '%';
+    zone.style.left  = cur.x + '%';
+    zone.style.top   = cur.y + '%';
+    zone.style.width = cur.w + '%';
 
     if (!cur.data) {
         inner.innerHTML = '';
@@ -1915,10 +1913,9 @@ function updateLogoPositionForSide(s) {
     const cur  = logos[s];
     const zone = document.getElementById(s === 'front' ? 'logoZoneFront' : 'logoZoneBack');
     if (!zone) return;
-    zone.style.left   = cur.x + '%';
-    zone.style.top    = cur.y + '%';
-    zone.style.width  = cur.w + '%';
-    zone.style.height = cur.h + '%';
+    zone.style.left  = cur.x + '%';
+    zone.style.top   = cur.y + '%';
+    zone.style.width = cur.w + '%';
 }
 
 function updateLogoPosition() {
@@ -1990,7 +1987,7 @@ function initLogoInteraction() {
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
                 );
-                pinchState = { side: s, startDist: d, origW: logos[s].w, origH: logos[s].h };
+                pinchState = { side: s, startDist: d, origW: logos[s].w };
             }
         }, { passive: false });
 
@@ -2002,16 +1999,7 @@ function initLogoInteraction() {
                 e.touches[0].clientY - e.touches[1].clientY
             );
             const scale = d / pinchState.startDist;
-            const ratio = pinchState.origH / pinchState.origW;
-            let newW = pinchState.origW * scale;
-            let newH = newW * ratio;
-            /* Contraindre en gardant le ratio */
-            if (newW < 8)  { newW = 8;  newH = newW * ratio; }
-            if (newW > 50) { newW = 50; newH = newW * ratio; }
-            if (newH < 6)  { newH = 6;  newW = newH / ratio; }
-            if (newH > 40) { newH = 40; newW = newH / ratio; }
-            logos[s].w = newW;
-            logos[s].h = newH;
+            logos[s].w = Math.min(50, Math.max(8, pinchState.origW * scale));
             updateLogoPositionForSide(s);
         }, { passive: false });
 
@@ -2077,7 +2065,7 @@ function onLogoDown(e, activeSide) {
             type: 'resize', side: activeSide,
             corner: cornerY + cornerX,
             startX: e.clientX, startY: e.clientY,
-            origW: cur.w, origH: cur.h, origX: cur.x, origY: cur.y,
+            origW: cur.w, origX: cur.x, origY: cur.y,
             stageW: rect.width, stageH: rect.height
         };
     } else {
@@ -2108,21 +2096,14 @@ function onLogoMove(e) {
     }
 
     if (dragState.type === 'resize') {
-        /* Apple-style : coin direct, linéaire, ratio toujours conservé */
+        /* Diagonal, ratio 1:1 (aspect-ratio CSS) — un seul scalaire */
         const dx = e.clientX - dragState.startX;
         const dy = e.clientY - dragState.startY;
         const signX = dragState.corner.includes('e') ? 1 : -1;
         const signY = dragState.corner.includes('s') ? 1 : -1;
         const delta  = (signX * dx + signY * dy) * 0.5;
         const pctChg = (delta / dragState.stageW) * 100 * 2.5;
-        const ratio  = dragState.origH / dragState.origW;
-        let nw = dragState.origW + pctChg;
-        let nh = nw * ratio;
-        if (nw < 8)  { nw = 8;  nh = nw * ratio; }
-        if (nw > 50) { nw = 50; nh = nw * ratio; }
-        if (nh < 6)  { nh = 6;  nw = nh / ratio; }
-        if (nh > 40) { nh = 40; nw = nh / ratio; }
-        cur.w = nw; cur.h = nh;
+        cur.w = Math.min(50, Math.max(8, dragState.origW + pctChg));
         requestAnimationFrame(() => updateLogoPositionForSide(s));
     }
 }
