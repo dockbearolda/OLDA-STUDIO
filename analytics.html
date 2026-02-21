@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics — OLDA Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            background: #f2f2f7;
+            min-height: 100vh;
+            padding: 48px 24px 64px;
+            color: #1c1c1e;
+        }
+
+        /* ── En-tête ── */
+        header {
+            max-width: 1100px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        header h1 {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #1c1c1e;
+        }
+
+        header p {
+            margin-top: 6px;
+            font-size: 15px;
+            color: #8e8e93;
+            font-weight: 400;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge-total {
+            background: #1c1c1e;
+            color: #fff;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .btn-dashboard {
+            background: #fff;
+            color: #1c1c1e;
+            border: 1.5px solid #e5e5ea;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.15s;
+        }
+
+        .btn-dashboard:hover {
+            background: #f2f2f7;
+        }
+
+        /* Indicateur de sync */
+        .sync-status {
+            max-width: 1100px;
+            margin: -14px auto 16px;
+            font-size: 12px;
+            color: #aeaeb2;
+            text-align: right;
+        }
+
+        .sync-status.erreur { color: #ff3b30; }
+
+        /* ── Filtres ── */
+        .filtres {
+            max-width: 1100px;
+            margin: 0 auto 16px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filtre-btn {
+            background: #fff;
+            border: 1.5px solid #e5e5ea;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #3c3c43;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .filtre-btn:hover {
+            background: #f2f2f7;
+        }
+
+        .filtre-btn.actif {
+            background: #1c1c1e;
+            color: #fff;
+            border-color: #1c1c1e;
+        }
+
+        .filtre-btn .badge {
+            background: rgba(255,255,255,0.25);
+            border-radius: 10px;
+            padding: 1px 6px;
+            font-size: 11px;
+            margin-left: 4px;
+        }
+
+        .filtre-btn:not(.actif) .badge {
+            background: #f2f2f7;
+            color: #8e8e93;
+        }
+
+        /* Recherche */
+        .search-wrap {
+            margin-left: auto;
+        }
+
+        .search-input {
+            background: #fff;
+            border: 1.5px solid #e5e5ea;
+            border-radius: 20px;
+            padding: 6px 14px 6px 36px;
+            font-size: 13px;
+            color: #1c1c1e;
+            outline: none;
+            width: 200px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 12px center;
+            transition: border-color 0.15s, width 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #007aff;
+            width: 260px;
+        }
+
+        /* ── Tableau ── */
+        .table-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8e8e93;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f2f2f7;
+            background: #fff;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f2f2f7;
+            transition: background 0.1s;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: #f9f9fb;
+        }
+
+        tbody td {
+            padding: 14px 16px;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .td-num {
+            font-weight: 600;
+            color: #1c1c1e;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .td-client {
+            font-weight: 500;
+        }
+
+        .td-date {
+            color: #8e8e93;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .td-ref {
+            color: #3c3c43;
+            font-size: 13px;
+        }
+
+        .td-taille {
+            font-size: 13px;
+            color: #3c3c43;
+            text-align: center;
+        }
+
+        .td-prix {
+            font-weight: 600;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .badge-paye {
+            display: inline-block;
+            border-radius: 8px;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-paye.oui  { background: #d1f7e0; color: #1a7a3c; }
+        .badge-paye.non  { background: #ffe5e5; color: #c0392b; }
+
+        /* Dropdown statut */
+        .statut-select {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 1.5px solid transparent;
+            border-radius: 10px;
+            padding: 4px 24px 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background-repeat: no-repeat;
+            background-position: right 6px center;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            outline: none;
+            transition: border-color 0.15s, opacity 0.2s;
+            white-space: nowrap;
+            min-width: 160px;
+        }
+
+        .statut-select:hover  { border-color: #c7c7cc; }
+        .statut-select:focus  { border-color: #007aff; }
+        .statut-select.saving { opacity: 0.5; pointer-events: none; }
+
+        .statut-select.s-en_attente        { background-color: #fff8ee; color: #b05400; border-color: #ffd599; }
+        .statut-select.s-a_preparer        { background-color: #fffce6; color: #7a6200; border-color: #ffee99; }
+        .statut-select.s-maquette_a_faire  { background-color: #f7eeff; color: #6a1d9e; border-color: #d9b3ff; }
+        .statut-select.s-prt_a_faire       { background-color: #fff0ee; color: #a11a10; border-color: #ffb3ad; }
+        .statut-select.s-validation        { background-color: #eef9ff; color: #0a5c7a; border-color: #99dff7; }
+        .statut-select.s-impression        { background-color: #eef4ff; color: #003a99; border-color: #99beff; }
+        .statut-select.s-pressage          { background-color: #eefff3; color: #1a6b35; border-color: #99e6b3; }
+        .statut-select.s-client_a_contacter{ background-color: #fff0f4; color: #990028; border-color: #ffb3c6; }
+        .statut-select.s-client_prevenu    { background-color: #f0f0ff; color: #2a2899; border-color: #b3b3ff; }
+        .statut-select.s-archives          { background-color: #f5f5f7; color: #636366; border-color: #c7c7cc; }
+
+        /* ── État vide ── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: #8e8e93;
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #3c3c43;
+        }
+
+        .empty-state span {
+            font-size: 14px;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(8px);
+            background: #1c1c1e;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.25s, transform 0.25s;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            body { padding: 32px 12px 48px; }
+            header h1 { font-size: 26px; }
+            .table-wrap { border-radius: 12px; }
+            thead th, tbody td { padding: 10px 10px; }
+            .search-input { width: 160px; }
+            .search-input:focus { width: 200px; }
+            .td-ref, .td-taille { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1>Toutes les commandes</h1>
+        <p>Vue analytique en temps réel</p>
+    </div>
+    <div class="header-right">
+        <a href="/" class="btn-dashboard">← Dashboard</a>
+        <div class="badge-total" id="badge-total">— commandes</div>
+    </div>
+</header>
+
+<div class="sync-status" id="sync-status">Chargement…</div>
+
+<div class="filtres" id="filtres">
+    <button class="filtre-btn actif" data-statut="tous">Tout <span class="badge" id="count-tous">0</span></button>
+    <button class="filtre-btn" data-statut="en_attente">En attente <span class="badge" id="count-en_attente">0</span></button>
+    <button class="filtre-btn" data-statut="a_preparer">À préparer <span class="badge" id="count-a_preparer">0</span></button>
+    <button class="filtre-btn" data-statut="maquette_a_faire">Maquette <span class="badge" id="count-maquette_a_faire">0</span></button>
+    <button class="filtre-btn" data-statut="prt_a_faire">PRT <span class="badge" id="count-prt_a_faire">0</span></button>
+    <button class="filtre-btn" data-statut="validation">Validation <span class="badge" id="count-validation">0</span></button>
+    <button class="filtre-btn" data-statut="impression">Impression <span class="badge" id="count-impression">0</span></button>
+    <button class="filtre-btn" data-statut="pressage">Pressage <span class="badge" id="count-pressage">0</span></button>
+    <button class="filtre-btn" data-statut="client_a_contacter">À contacter <span class="badge" id="count-client_a_contacter">0</span></button>
+    <button class="filtre-btn" data-statut="client_prevenu">Prévenu <span class="badge" id="count-client_prevenu">0</span></button>
+    <button class="filtre-btn" data-statut="archives">Archives <span class="badge" id="count-archives">0</span></button>
+    <div class="search-wrap">
+        <input class="search-input" id="search" type="text" placeholder="Rechercher…" autocomplete="off">
+    </div>
+</div>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>N° Commande</th>
+                <th>Client</th>
+                <th>Date</th>
+                <th>Statut</th>
+                <th class="td-ref">Réf / Collection</th>
+                <th class="td-taille">Taille</th>
+                <th style="text-align:right">Total</th>
+                <th>Payé</th>
+            </tr>
+        </thead>
+        <tbody id="orders-body">
+            <tr>
+                <td colspan="8">
+                    <div class="empty-state">
+                        <div class="icon">⏳</div>
+                        <p>Chargement des commandes…</p>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    /* ── État global ── */
+    let allOrders = [];
+    let filtreActif = 'tous';
+    let recherche = '';
+
+    const STATUT_LABELS = {
+        en_attente:         'En attente',
+        a_preparer:         'À préparer',
+        maquette_a_faire:   'Maquette à faire',
+        prt_a_faire:        'PRT à faire',
+        validation:         'Validation',
+        impression:         'Impression',
+        pressage:           'Pressage',
+        client_a_contacter: 'Client à contacter',
+        client_prevenu:     'Client prévenu',
+        archives:           'Archives'
+    };
+
+    const STATUS_KEYS = Object.keys(STATUT_LABELS);
+
+    /* ── Toast ── */
+    let toastTimer = null;
+    function showToast(msg) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+    }
+
+    /* ── Formatage ── */
+    function formatDate(iso) {
+        if (!iso) return '—';
+        try {
+            return new Date(iso).toLocaleDateString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+            });
+        } catch (_) { return iso; }
+    }
+
+    function formatPrix(order) {
+        const prix = order.prix || {};
+        const total = parseFloat(prix.total) || parseFloat(order.total) || 0;
+        if (!total) return '—';
+        return total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+    }
+
+    function isPaye(order) {
+        const p = order.paiement || {};
+        const statut = p.statut || order.paye || '';
+        return statut === 'OUI' || statut === 'PAID';
+    }
+
+    function statutOrder(order) {
+        return order.statut || 'en_attente';
+    }
+
+    /* ── Mise à jour des compteurs ── */
+    function majCompteurs() {
+        const counts = { tous: allOrders.length };
+        STATUS_KEYS.forEach(k => { counts[k] = 0; });
+        allOrders.forEach(o => {
+            const s = statutOrder(o);
+            counts[s] = (counts[s] || 0) + 1;
+        });
+
+        Object.keys(counts).forEach(k => {
+            const el = document.getElementById('count-' + k);
+            if (el) el.textContent = counts[k];
+        });
+
+        const badge = document.getElementById('badge-total');
+        const n = allOrders.length;
+        badge.textContent = n + ' commande' + (n !== 1 ? 's' : '');
+    }
+
+    /* ── Rendu du tableau ── */
+    function renderOrders() {
+        const tbody = document.getElementById('orders-body');
+        const term = recherche.toLowerCase();
+
+        const filtered = allOrders.filter(o => {
+            if (filtreActif !== 'tous' && statutOrder(o) !== filtreActif) return false;
+            if (term) {
+                const hay = [o.commande, o.nom, o.telephone, o.collection, o.reference, o.taille]
+                    .filter(Boolean).join(' ').toLowerCase();
+                if (!hay.includes(term)) return false;
+            }
+            return true;
+        });
+
+        if (!filtered.length) {
+            tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">
+                <div class="icon">${allOrders.length ? '🔍' : '📭'}</div>
+                <p>${allOrders.length ? 'Aucune commande trouvée' : 'Aucune commande reçue'}</p>
+                <span>${allOrders.length ? 'Essayez d\'autres critères de recherche' : 'Les nouvelles commandes apparaîtront ici en temps réel'}</span>
+            </div></td></tr>`;
+            return;
+        }
+
+        /* Tri : plus récent en premier */
+        const sorted = [...filtered].sort((a, b) => {
+            const da = new Date(a._reçuLe || a.date || 0);
+            const db = new Date(b._reçuLe || b.date || 0);
+            return db - da;
+        });
+
+        tbody.innerHTML = sorted.map(o => {
+            const statut = statutOrder(o);
+            const paye = isPaye(o);
+            const ref = [o.collection, o.reference].filter(Boolean).join(' / ') || '—';
+
+            const optionsHTML = STATUS_KEYS.map(k =>
+                `<option value="${k}" ${k === statut ? 'selected' : ''}>${STATUT_LABELS[k]}</option>`
+            ).join('');
+
+            return `<tr data-id="${escHtml(o.commande || '')}">
+                <td class="td-num">${escHtml(o.commande || '—')}</td>
+                <td class="td-client">${escHtml(o.nom || '—')}</td>
+                <td class="td-date">${formatDate(o._reçuLe || o.date)}</td>
+                <td>
+                    <select class="statut-select s-${escHtml(statut)}" data-id="${escHtml(o.commande || '')}" data-statut="${escHtml(statut)}">
+                        ${optionsHTML}
+                    </select>
+                </td>
+                <td class="td-ref">${escHtml(ref)}</td>
+                <td class="td-taille" style="text-align:center">${escHtml(o.taille || '—')}</td>
+                <td class="td-prix">${formatPrix(o)}</td>
+                <td>
+                    <span class="badge-paye ${paye ? 'oui' : 'non'}">${paye ? 'OUI' : 'NON'}</span>
+                </td>
+            </tr>`;
+        }).join('');
+
+        /* Attacher les listeners sur les selects */
+        tbody.querySelectorAll('.statut-select').forEach(sel => {
+            sel.addEventListener('change', async function () {
+                const id = this.dataset.id;
+                const newStatut = this.value;
+                this.classList.add('saving');
+
+                try {
+                    const r = await fetch(`/api/orders/${encodeURIComponent(id)}/statut`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ statut: newStatut })
+                    });
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+
+                    /* Mise à jour locale */
+                    const order = allOrders.find(o => o.commande === id);
+                    if (order) order.statut = newStatut;
+
+                    this.dataset.statut = newStatut;
+                    this.className = `statut-select s-${newStatut}`;
+                    majCompteurs();
+                    showToast('Statut mis à jour : ' + STATUT_LABELS[newStatut]);
+
+                } catch (err) {
+                    /* Rétablir l'ancienne valeur en cas d'erreur */
+                    this.value = this.dataset.statut;
+                    showToast('Erreur lors de la mise à jour');
+                } finally {
+                    this.classList.remove('saving');
+                }
+            });
+        });
+    }
+
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    /* ── Sync status ── */
+    function afficherSync(texte, erreur) {
+        const el = document.getElementById('sync-status');
+        el.textContent = texte;
+        erreur ? el.classList.add('erreur') : el.classList.remove('erreur');
+    }
+
+    function heureNow() {
+        return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    /* ── Filtres ── */
+    document.getElementById('filtres').addEventListener('click', e => {
+        const btn = e.target.closest('.filtre-btn');
+        if (!btn) return;
+        document.querySelectorAll('.filtre-btn').forEach(b => b.classList.remove('actif'));
+        btn.classList.add('actif');
+        filtreActif = btn.dataset.statut;
+        renderOrders();
+    });
+
+    /* ── Recherche ── */
+    document.getElementById('search').addEventListener('input', e => {
+        recherche = e.target.value;
+        renderOrders();
+    });
+
+    /* ── Chargement initial HTTP ── */
+    async function chargerCommandes() {
+        try {
+            const resp = await fetch('/api/orders/list');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            allOrders = data.orders || [];
+            majCompteurs();
+            renderOrders();
+            afficherSync('Chargé à ' + heureNow(), false);
+        } catch (err) {
+            afficherSync('Erreur de chargement — ' + err.message, true);
+        }
+    }
+
+    chargerCommandes();
+
+    /* ── Socket.io — temps réel ── */
+    const socket = io({ transports: ['websocket', 'polling'] });
+
+    socket.on('connect', () => {
+        afficherSync('Connecté — en attente de nouvelles commandes…', false);
+    });
+
+    socket.on('disconnect', () => {
+        afficherSync('Connexion perdue — reconnexion…', true);
+    });
+
+    /* Nouvelle commande reçue : rechargement de la liste */
+    socket.on('new-order', async (order) => {
+        showToast('Nouvelle commande — ' + (order.nom || '') + ' (' + (order.commande || '') + ')');
+        await chargerCommandes();
+        afficherSync('Mis à jour à ' + heureNow(), false);
+    });
+
+    /* Mise à jour statut depuis un autre client */
+    socket.on('order-updated', ({ commande, statut }) => {
+        const order = allOrders.find(o => o.commande === commande);
+        if (order && order.statut !== statut) {
+            order.statut = statut;
+            majCompteurs();
+            renderOrders();
+        }
+    });
+
+    socket.on('stats-update', () => {
+        majCompteurs();
+    });
+</script>
+
+</body>
+</html>

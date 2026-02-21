@@ -249,6 +249,36 @@ if (IS_DASHBOARD) {
         }
         res.json({ orders: Array.from(orders.values()), total: orders.size });
     });
+
+    /* GET /api/orders/list — liste complète pour la page analytics (non protégée, même niveau que /api/stats) */
+    app.get('/api/orders/list', (req, res) => {
+        res.json({ orders: Array.from(orders.values()), total: orders.size });
+    });
+
+    /* PATCH /api/orders/:id/statut — mise à jour du statut d'une commande */
+    app.patch('/api/orders/:id/statut', (req, res) => {
+        const id = req.params.id;
+        const { statut } = req.body;
+
+        if (!STATUS_KEYS.includes(statut)) {
+            return res.status(400).json({ error: 'Statut invalide' });
+        }
+
+        const order = orders.get(id);
+        if (!order) {
+            return res.status(404).json({ error: 'Commande introuvable' });
+        }
+
+        order.statut = statut;
+        orders.set(id, order);
+
+        if (io) {
+            io.emit('stats-update', computeStats());
+            io.emit('order-updated', { commande: id, statut });
+        }
+
+        res.json({ ok: true, commande: id, statut });
+    });
 }
 
 /* ── Route racine ── */
@@ -256,6 +286,11 @@ const ROOT_FILE = IS_DASHBOARD ? 'dashboard.html' : 'index.html';
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, ROOT_FILE));
+});
+
+/* ── Route analytics ── */
+app.get('/dashboard/analytics', (req, res) => {
+    res.sendFile(path.join(__dirname, 'analytics.html'));
 });
 
 server.listen(PORT, () => {
