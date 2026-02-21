@@ -59,9 +59,17 @@ if (IS_DASHBOARD) {
 }
 
 /* ── CORS pour les requêtes cross-origin du site client ── */
+const ALLOWED_ORIGINS = [
+    CLIENT_ORIGIN,
+    'https://dasholda.up.railway.app',
+    'https://oldastudio.up.railway.app',
+    'http://localhost:3000'
+];
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin',  CLIENT_ORIGIN);
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    const origin = req.headers.origin || '';
+    const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : CLIENT_ORIGIN;
+    res.setHeader('Access-Control-Allow-Origin',  allowed);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     if (req.method === 'OPTIONS') return res.sendStatus(204);
     next();
@@ -199,42 +207,39 @@ app.use(express.static(path.join(__dirname), {
     }
 }));
 
-/* ── API Commandes (dashboard uniquement) ── */
+/* ── POST /api/orders — reçoit une commande (toujours actif) ── */
+app.post('/api/orders', (req, res) => {
+    const auth = req.headers['authorization'] || '';
+    if (auth !== 'Bearer ' + DASHBOARD_TOKEN) {
+        return res.status(401).json({ error: 'Non autorisé' });
+    }
+
+    const order = req.body;
+    if (!order || !order.commande) {
+        return res.status(400).json({ error: 'Données manquantes (champ commande requis)' });
+    }
+
+    if (!order.statut) order.statut = 'en_attente';
+    order._reçuLe = new Date().toISOString();
+
+    orders.set(order.commande, order);
+    console.log('[Dashboard] Nouvelle commande :', order.commande, '—', order.nom);
+
+    if (io) {
+        io.emit('new-order', {
+            commande  : order.commande,
+            nom       : order.nom,
+            statut    : order.statut,
+            timestamp : order._reçuLe
+        });
+        io.emit('stats-update', computeStats());
+    }
+
+    res.status(201).json({ ok: true, commande: order.commande });
+});
+
+/* ── API dashboard (stats, liste, mise à jour statut) ── */
 if (IS_DASHBOARD) {
-
-    /* POST /api/orders — reçoit une commande du site client */
-    app.post('/api/orders', (req, res) => {
-        const auth = req.headers['authorization'] || '';
-        if (auth !== 'Bearer ' + DASHBOARD_TOKEN) {
-            return res.status(401).json({ error: 'Non autorisé' });
-        }
-
-        const order = req.body;
-        if (!order || !order.commande) {
-            return res.status(400).json({ error: 'Données manquantes (champ commande requis)' });
-        }
-
-        /* Initialisation */
-        if (!order.statut) order.statut = 'en_attente';
-        order._reçuLe = new Date().toISOString();
-
-        orders.set(order.commande, order);
-
-        console.log('[Dashboard] Nouvelle commande :', order.commande, '—', order.nom);
-
-        /* Diffusion temps réel à tous les clients dashboard connectés */
-        if (io) {
-            io.emit('new-order', {
-                commande  : order.commande,
-                nom       : order.nom,
-                statut    : order.statut,
-                timestamp : order._reçuLe
-            });
-            io.emit('stats-update', computeStats());
-        }
-
-        res.status(201).json({ ok: true, commande: order.commande });
-    });
 
     /* GET /api/stats — statistiques par statut */
     app.get('/api/stats', (req, res) => {
