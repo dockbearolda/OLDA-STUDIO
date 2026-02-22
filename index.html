@@ -2626,27 +2626,28 @@ async function sendToAtelier(payload, mockups) {
 
         if (!response.ok) {
             var errBody = '';
-            try { errBody = await response.text(); } catch(_) {}
-            console.error('[Atelier] ERREUR HTTP', response.status, response.statusText);
-            console.error('[Atelier] Réponse serveur :', errBody);
-            if (response.status === 401) console.error('[Atelier] → Token invalide — vérifiez DASHBOARD_TOKEN dans Railway');
-            if (response.status === 502) console.error('[Atelier] → DASHOLDA injoignable — vérifiez DASHOLDA_URL dans Railway');
-            if (response.status === 503) console.error('[Atelier] → DASHOLDA_URL non configurée sur le serveur');
+            try { errBody = await response.text(); } catch (_) {}
+            console.error('❌ Erreur de liaison : HTTP', response.status, response.statusText, '— commande:', orderData.commande);
+            if (errBody) console.error('   Réponse serveur :', errBody);
+            if (response.status === 401) console.error('   → Token invalide — vérifiez DASHBOARD_TOKEN dans Railway');
+            if (response.status === 502) console.error('   → DASHOLDA injoignable — vérifiez DASHOLDA_URL dans Railway');
+            if (response.status === 503) console.error('   → DASHOLDA_URL non configurée sur le serveur');
             return { ok: false, error: 'HTTP ' + response.status + ' — ' + (errBody || response.statusText) };
         }
 
         var result = await response.json().catch(function() { return {}; });
-        console.info('[Atelier] OK — commande transmise :', orderData.commande, result.dasholadId ? '→ id: ' + result.dasholadId : '');
+        console.log('✅ Connexion établie avec le Dashboard — commande:', orderData.commande,
+                    result.dasholadId ? '— id: ' + result.dasholadId : '');
         return { ok: true, data: result };
 
     } catch (e) {
-        console.error('[Atelier] ÉCHEC réseau après 3 tentatives :', e.name, '—', e.message);
+        console.error('❌ Erreur de liaison :', e.name, '—', e.message, '— commande:', orderData.commande);
         /* Sauvegarde locale pour retry ultérieur */
         try {
             var pending = JSON.parse(localStorage.getItem('olda_pending_dasholda') || '[]');
             pending.push(Object.assign({}, orderData, { _failedAt: new Date().toISOString() }));
             localStorage.setItem('olda_pending_dasholda', JSON.stringify(pending));
-            console.warn('[Atelier] Commande sauvegardée en local (olda_pending_dasholda)');
+            console.warn('   → Commande sauvegardée en local (olda_pending_dasholda)');
         } catch (_) {}
         return { ok: false, error: e.message };
     }
@@ -2743,7 +2744,7 @@ window.submit = async function() {
           l'envoi est unidirectionnel — NE PAS utiliser no-cors pour le dashboard OLDA ── */
     fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(() => {});
 
-    /* ── Envoi → DASHOLDA via relay serveur ── */
+    /* ── Envoi → DASHOLDA via relay same-origin (élimine le CORS navigateur/dasholda) ── */
     var dashResult = await sendToAtelier(payload, {
         front: mockupFront,
         back:  mockupBack

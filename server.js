@@ -16,6 +16,14 @@ const CLIENT_ORIGIN   = process.env.CLIENT_ORIGIN  || 'https://oldastudio.up.rai
 const DASHOLDA_URL    = process.env.DASHOLDA_URL              || 'https://dasholda.up.railway.app';
 const DASHOLDA_SECRET = process.env.DASHOLDA_WEBHOOK_SECRET   || 'd1e9c4cd170eb57f8ce6254b5aa70b7f708e465d48daefc7f3b0b7e16bd9f4dc';
 
+/* ── Diagnostic de démarrage — visible dans les logs Railway ── */
+console.log('━━━ OLDA Studio — Démarrage ━━━');
+console.log('  SITE_MODE       :', process.env.SITE_MODE || '(non défini → dashboard)');
+console.log('  DASHBOARD_TOKEN :', DASHBOARD_TOKEN ? '✅ défini (' + DASHBOARD_TOKEN.slice(0, 8) + '…)' : '❌ MANQUANT');
+console.log('  DASHOLDA_URL    :', DASHOLDA_URL    ? '✅ ' + DASHOLDA_URL                               : '❌ MANQUANT');
+console.log('  CLIENT_ORIGIN   :', CLIENT_ORIGIN);
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
 /* ── Log en mémoire des envois échoués vers DASHOLDA ── */
 const failedForwards = [];
 
@@ -59,19 +67,27 @@ if (IS_DASHBOARD) {
     });
 }
 
-/* ── CORS pour les requêtes cross-origin du site client ── */
+/* ── CORS — autorise explicitement oldastudio + dasholda + localhost ── */
 const ALLOWED_ORIGINS = [
-    CLIENT_ORIGIN,
-    'https://dasholda.up.railway.app',
     'https://oldastudio.up.railway.app',
-    'http://localhost:3000'
-];
+    'https://dasholda.up.railway.app',
+    'http://localhost:3000',
+    CLIENT_ORIGIN   /* valeur de la var Railway CLIENT_ORIGIN si différente */
+].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i); /* déduplique */
+
 app.use((req, res, next) => {
     const origin = req.headers.origin || '';
-    const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : CLIENT_ORIGIN;
-    res.setHeader('Access-Control-Allow-Origin',  allowed);
+    if (ALLOWED_ORIGINS.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin',  origin);
+    } else if (!origin) {
+        /* Requête same-origin ou serveur-à-serveur — pas de header CORS nécessaire */
+    } else {
+        /* Origine inconnue : on répond quand même pour ne pas bloquer les tests */
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Max-Age', '86400'); /* cache preflight 24h */
     if (req.method === 'OPTIONS') return res.sendStatus(204);
     next();
 });
@@ -159,10 +175,16 @@ app.post('/api/webhook/forward-to-dasholda', async (req, res) => {
     const payload = mapToDasholda(order);
 
     try {
-        const headers = { 'Content-Type': 'application/json' };
+        const headers = {
+            'Content-Type' : 'application/json',
+            'Authorization': 'Bearer ' + DASHBOARD_TOKEN   /* token concordant avec DASHOLDA */
+        };
         if (DASHOLDA_SECRET) headers['x-webhook-secret'] = DASHOLDA_SECRET;
 
-        const r = await fetch(DASHOLDA_URL + '/api/orders', {
+        const targetUrl = DASHOLDA_URL.replace(/\/$/, '') + '/api/orders';
+        console.log('[→DASHOLDA] Envoi vers', targetUrl, '— commande:', order.commande);
+
+        const r = await fetch(targetUrl, {
             method : 'POST',
             headers,
             body   : JSON.stringify(payload)
@@ -173,12 +195,12 @@ app.post('/api/webhook/forward-to-dasholda', async (req, res) => {
             throw new Error(`HTTP ${r.status} — ${txt.slice(0, 300)}`);
         }
 
-        const data = await r.json();
-        console.log('[→DASHOLDA] OK :', order.commande, '— id:', data.id || '?');
+        const data = await r.json().catch(() => ({}));
+        console.log('✅ Connexion établie avec le Dashboard — commande:', order.commande, '— id:', data.id || '?');
         res.status(201).json({ ok: true, commande: order.commande, dasholadId: data.id });
 
     } catch (err) {
-        console.error('[→DASHOLDA] ERREUR pour', order.commande, '—', err.message);
+        console.error('❌ Erreur de liaison :', err.message, '— commande:', order.commande);
         failedForwards.push({
             commande : order.commande,
             payload,
@@ -199,12 +221,23 @@ app.get('/api/webhook/failed-forwards', (req, res) => {
     res.json({ count: failedForwards.length, items: failedForwards });
 });
 
-/* ── GET /api/config — expose les variables d'environnement Railway au client ── */
+/* GET /api/config — expose les variables Railway au client (token + URL) */
 app.get('/api/config', (req, res) => {
     const url = DASHOLDA_URL || '';
     res.json({
         dasholda_url    : url.startsWith('http') ? url : ('https://' + url),
         dashboard_token : DASHBOARD_TOKEN
+    });
+});
+
+/* GET /api/ping — health-check ultra-léger (pas d'auth requise) */
+app.get('/api/ping', (req, res) => {
+    res.json({
+        ok      : true,
+        mode    : IS_DASHBOARD ? 'dashboard' : 'form',
+        dasholda: DASHOLDA_URL || null,
+        token   : DASHBOARD_TOKEN ? 'défini' : 'MANQUANT',
+        ts      : new Date().toISOString()
     });
 });
 
@@ -224,7 +257,7 @@ app.post('/api/orders', (req, res) => {
     order._reçuLe = new Date().toISOString();
 
     orders.set(order.commande, order);
-    console.log('[Dashboard] Nouvelle commande :', order.commande, '—', order.nom);
+    console.log('✅ Commande reçue :', order.commande, '—', order.nom || order.customerName || '?');
 
     if (io) {
         io.emit('new-order', {
