@@ -208,6 +208,15 @@ app.use(express.static(path.join(__dirname), {
     }
 }));
 
+/* ── GET /api/config — expose les variables d'environnement Railway au client ── */
+app.get('/api/config', (req, res) => {
+    const url = DASHOLDA_URL || '';
+    res.json({
+        dasholda_url    : url.startsWith('http') ? url : ('https://' + url),
+        dashboard_token : DASHBOARD_TOKEN
+    });
+});
+
 /* ── POST /api/orders — reçoit une commande (toujours actif) ── */
 app.post('/api/orders', (req, res) => {
     const auth = req.headers['authorization'] || '';
