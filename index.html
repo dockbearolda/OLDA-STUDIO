@@ -2602,6 +2602,15 @@ async function sendToAtelier(payload, mockups) {
         };
     }
 
+    /* Si le token n'est pas encore chargé, re-tenter /api/config */
+    if (!DASHBOARD_TOKEN) {
+        try {
+            var cfg = await fetch('/api/config').then(function(r) { return r.json(); });
+            if (cfg.dashboard_token) DASHBOARD_TOKEN = cfg.dashboard_token;
+            if (cfg.dasholda_url)    DASHBOARD_URL   = cfg.dasholda_url;
+        } catch (_) {}
+    }
+
     console.info('[Atelier] POST → /api/webhook/forward-to-dasholda — commande:', orderData.commande);
 
     try {

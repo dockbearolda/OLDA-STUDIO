@@ -199,15 +199,6 @@ app.get('/api/webhook/failed-forwards', (req, res) => {
     res.json({ count: failedForwards.length, items: failedForwards });
 });
 
-/* ── Fichiers statiques ── */
-app.use(express.static(path.join(__dirname), {
-    setHeaders(res, filePath) {
-        if (filePath.endsWith('.html')) {
-            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        }
-    }
-}));
-
 /* ── GET /api/config — expose les variables d'environnement Railway au client ── */
 app.get('/api/config', (req, res) => {
     const url = DASHOLDA_URL || '';
@@ -295,6 +286,19 @@ if (IS_DASHBOARD) {
         res.json({ ok: true, commande: id, statut });
     });
 }
+
+/* ══════════════════════════════════════════════════════════════
+   FICHIERS STATIQUES — APRÈS toutes les routes /api/*
+   express.static sert les .html/.css/.js/.svg/.png depuis la racine.
+   Placé ICI pour ne pas intercepter les routes /api/* ci-dessus.
+   ══════════════════════════════════════════════════════════════ */
+app.use(express.static(path.join(__dirname), {
+    setHeaders(res, filePath) {
+        if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
+    }
+}));
 
 /* ── Route racine ── */
 const ROOT_FILE = IS_DASHBOARD ? 'dashboard.html' : 'index.html';
