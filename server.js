@@ -101,6 +101,7 @@ app.use(express.json({ limit: '15mb' }));
 
 /**
  * Transforme une commande OLDA Studio en payload DASHOLDA.
+ * Supporte les commandes multi-articles (champ items[]) et single-article.
  * DASHOLDA attend : orderNumber, customerName, customerEmail (requis),
  * total, subtotal, items[] (non vide), paymentStatus, notes, currency.
  */
@@ -109,40 +110,76 @@ function mapToDasholda(order) {
     const paiement = order.paiement || {};
     const fiche    = order.fiche    || {};
 
-    const tshirtVal = parseFloat(prix.tshirt)           || 0;
-    const persoVal  = parseFloat(prix.personnalisation)  || 0;
-    const subtotal  = tshirtVal + persoVal;
-    const totalVal  = parseFloat(prix.total)             || subtotal;
+    const totalVal  = parseFloat(prix.total) || 0;
+    const subtotal  = parseFloat(prix.tshirt) + parseFloat(prix.personnalisation || '0') || totalVal;
 
-    /* E-mail synthétique — OLDA Studio ne collecte pas les adresses e-mail */
-    const emailSlug    = (order.commande || 'cmd').replace(/[^a-z0-9]/gi, '-').toLowerCase();
-    const customerEmail = `${emailSlug}@commandes.oldastudio.fr`;
+    /* E-mail — utilise l'adresse fournie ou en génère une synthétique */
+    const customerEmail = order.email
+        ? order.email
+        : `${(order.commande || 'cmd').replace(/[^a-z0-9]/gi, '-').toLowerCase()}@commandes.oldastudio.fr`;
 
-    /* Libellé de l'article */
-    const itemName = [order.collection, order.reference, order.taille ? `(${order.taille})` : '']
-        .filter(Boolean).join(' ') || 'T-shirt OLDA';
-
-    /* Catégorie produit pour le routage DASHOLDA
-       famille 'textile' → product_type 't-shirt'
-       famille 'mug'     → product_type 'mug'
-       défaut            → 't-shirt' (jamais 'autre' par erreur) */
+    /* Catégorie produit */
     const familleMap = { textile: 't-shirt', mug: 'mug' };
-    const product_type = familleMap[order.famille] || order.category || order.famille || 't-shirt';
+    const product_type = familleMap[order.famille] || order.famille || 't-shirt';
 
-    /* Notes enrichies */
+    /* Nom complet du client */
+    const customerName = [order.nom, order.prenom].filter(Boolean).join(' ') || '';
+
+    /* Construction des items :
+       - Si order.items[] (multi-article tunnel React) → mappe chaque article
+       - Sinon (legacy single-article) → crée un item unique */
+    let items;
+    if (Array.isArray(order.items) && order.items.length > 0) {
+        items = order.items.map(item => {
+            const p = item.prix || {};
+            const name = [item.collection, item.reference, item.taille ? `(${item.taille})` : '']
+                .filter(Boolean).join(' ') || 'T-shirt OLDA';
+            const price = parseFloat(p.total) || parseFloat(p.tshirt) || 0;
+            const notesParts = [
+                item.note                ? item.note                               : '',
+                item.couleurTshirt       ? `Couleur: ${item.couleurTshirt}`        : '',
+                item.logoAvant           ? `Logo avant: ${item.logoAvant}`         : '',
+                item.logoArriere         ? `Logo arrière: ${item.logoArriere}`     : '',
+            ].filter(Boolean);
+            return {
+                name,
+                sku:      item.reference || '',
+                quantity: 1,
+                price,
+                notes:    notesParts.join(' | '),
+                imageUrl: item.imageUrl || null,
+            };
+        });
+    } else {
+        /* Legacy single-article */
+        const itemName = [order.collection, order.reference, order.taille ? `(${order.taille})` : '']
+            .filter(Boolean).join(' ') || 'T-shirt OLDA';
+        items = [{
+            name    : itemName,
+            sku     : order.reference || '',
+            quantity: 1,
+            price   : subtotal || totalVal,
+            imageUrl: fiche.mockupFront || null,
+        }];
+    }
+
+    /* Notes globales de la commande */
     const notes = [
-        order.note        || '',
-        order.famille     ? `Famille: ${order.famille}`           : '',
-        order.couleurTshirt ? `Couleur: ${order.couleurTshirt}`   : '',
-        order.logoAvant   ? `Logo avant: ${order.logoAvant}`      : '',
-        order.logoArriere ? `Logo arrière: ${order.logoArriere}`  : ''
+        order.note                  ? order.note                              : '',
+        order.famille               ? `Famille: ${order.famille}`             : '',
+        order.adresse               ? `Adresse: ${order.adresse}`             : '',
+        order.deadline              ? `Deadline: ${order.deadline}`           : '',
+        /* Legacy fields */
+        order.couleurTshirt         ? `Couleur: ${order.couleurTshirt}`       : '',
+        order.logoAvant             ? `Logo avant: ${order.logoAvant}`        : '',
+        order.logoArriere           ? `Logo arrière: ${order.logoArriere}`    : '',
     ].filter(Boolean).join(' | ') || '';
 
     return {
-        orderNumber   : order.commande   || '',
-        customerName  : order.nom        || '',
+        orderNumber   : order.commande     || '',
+        customerName,
         customerEmail,
-        customerPhone : order.telephone  || '',
+        customerPhone : order.telephone    || '',
         paymentStatus : paiement.statut === 'OUI' ? 'PAID' : 'PENDING',
         product_type,
         total         : totalVal,
@@ -151,13 +188,9 @@ function mapToDasholda(order) {
         tax           : 0,
         currency      : 'EUR',
         notes,
-        items: [{
-            name    : itemName,
-            sku     : order.reference || '',
-            quantity: 1,
-            price   : subtotal || totalVal,
-            imageUrl: fiche.mockupFront || null
-        }]
+        items,
+        /* Adresse de livraison */
+        shippingAddress: order.adresse || null,
     };
 }
 
@@ -330,9 +363,25 @@ if (IS_DASHBOARD) {
 
 /* ══════════════════════════════════════════════════════════════
    FICHIERS STATIQUES — APRÈS toutes les routes /api/*
-   express.static sert les .html/.css/.js/.svg/.png depuis la racine.
+   1. Vite build (dist/) — JS bundles, CSS, assets React
+   2. Racine — SVGs t-shirt, images, dashboard.html, analytics.html
    Placé ICI pour ne pas intercepter les routes /api/* ci-dessus.
    ══════════════════════════════════════════════════════════════ */
+
+/* Build React (dist/) */
+const DIST_DIR = path.join(__dirname, 'dist');
+const fs = require('fs');
+if (fs.existsSync(DIST_DIR)) {
+    app.use(express.static(DIST_DIR, {
+        setHeaders(res, filePath) {
+            if (filePath.endsWith('.html')) {
+                res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            }
+        }
+    }));
+}
+
+/* Racine — SVGs, images, manifest.json, dashboard.html, analytics.html */
 app.use(express.static(path.join(__dirname), {
     setHeaders(res, filePath) {
         if (filePath.endsWith('.html')) {
@@ -342,10 +391,16 @@ app.use(express.static(path.join(__dirname), {
 }));
 
 /* ── Route racine ── */
-const ROOT_FILE = IS_DASHBOARD ? 'dashboard.html' : 'index.html';
-
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, ROOT_FILE));
+    if (IS_DASHBOARD) {
+        return res.sendFile(path.join(__dirname, 'dashboard.html'));
+    }
+    /* Sert le build React si disponible, sinon fallback legacy */
+    const distIndex = path.join(__dirname, 'dist', 'index.html');
+    if (fs.existsSync(distIndex)) {
+        return res.sendFile(distIndex);
+    }
+    res.status(503).send('Build React non disponible. Lancez npm run build.');
 });
 
 /* ── Routes dashboard ── */

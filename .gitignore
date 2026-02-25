@@ -1,5 +1,8 @@
 node_modules/
 
+# Vite build output (généré lors du déploiement Railway)
+dist/
+
 # Prisma
 /prisma/dev.db
 /prisma/dev.db-journal
