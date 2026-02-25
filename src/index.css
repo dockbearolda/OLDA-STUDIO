@@ -227,6 +227,8 @@ body {
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-dark { background: var(--text-1); color: white; }
 .btn-dark:hover { background: #333; }
+.btn-success { background: #34C759; color: white; }
+.btn-success:hover { background: #28a745; }
 .btn-ghost {
   background: white;
   color: var(--text-2);

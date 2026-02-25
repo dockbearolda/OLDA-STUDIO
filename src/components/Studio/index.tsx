@@ -61,6 +61,15 @@ export default function Studio({ onNext, editItem, onDoneEditing }: Props) {
 
   // ── Logo sheet ───────────────────────────────────────
   const [showSheet, setShowSheet] = useState(false);
+  const [addedFlash, setAddedFlash] = useState(false);
+
+  function resetForm() {
+    setCollection(''); setReference(''); setTaille('M');
+    setDtfArriere(''); setNote('');
+    setPrixTshirt(25); setPrixPerso(0);
+    setLogoAvant({ ...DEFAULT_LOGO });
+    setLogoArriere({ ...DEFAULT_LOGO_BACK });
+  }
 
   // ── Drag ─────────────────────────────────────────────
   const [dragging, setDragging]   = useState(false);
@@ -177,10 +186,9 @@ export default function Studio({ onNext, editItem, onDoneEditing }: Props) {
       addedAt: new Date().toISOString(),
     };
     addItem(item);
-    // Reset for next item
-    setNote(''); setReference(''); setDtfArriere('');
-    setLogoAvant({ ...DEFAULT_LOGO });
-    setLogoArriere({ ...DEFAULT_LOGO_BACK });
+    resetForm();
+    setAddedFlash(true);
+    setTimeout(() => setAddedFlash(false), 1500);
   }
 
   // ── Update existing cart item ────────────────────────
@@ -197,6 +205,7 @@ export default function Studio({ onNext, editItem, onDoneEditing }: Props) {
       prix: { tshirt: prixTshirt, personnalisation: prixPerso, total },
     };
     updateItem(editItem.id, updated);
+    resetForm();
     onDoneEditing?.();
   }
 
@@ -548,8 +557,11 @@ export default function Studio({ onNext, editItem, onDoneEditing }: Props) {
         </>
       ) : (
         <>
-          <button className="btn btn-dark" onClick={addToCart}>
-            + Ajouter au panier
+          <button
+            className={`btn ${addedFlash ? 'btn-success' : 'btn-dark'}`}
+            onClick={addToCart}
+          >
+            {addedFlash ? '✓ Ajouté au panier !' : '+ Ajouter au panier'}
           </button>
           <button className="btn btn-primary" onClick={onNext}>
             Informations client →

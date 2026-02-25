@@ -37,6 +37,14 @@ export default function Payment({ clientInfo, onBack, onEditCart }: Props) {
       setError('Votre panier est vide. Ajoutez au moins un article.');
       return;
     }
+    if (!clientInfo.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(clientInfo.email.trim())) {
+      setError('Adresse email manquante ou invalide — retournez à l\'étape précédente pour la corriger.');
+      return;
+    }
+    if (!clientInfo.nom.trim() || !clientInfo.prenom.trim()) {
+      setError('Nom et prénom requis — retournez à l\'étape précédente.');
+      return;
+    }
     setLoading(true);
     setError('');
 

@@ -47,7 +47,11 @@ export default function ClientForm({ info, onChange, onNext }: Props) {
     if (!info.nom.trim())       errs.nom       = 'Requis';
     if (!info.prenom.trim())    errs.prenom    = 'Requis';
     if (!info.telephone.trim()) errs.telephone = 'Requis';
-    if (!info.email.trim())     errs.email     = 'Requis';
+    if (!info.email.trim()) {
+      errs.email = 'Requis';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(info.email.trim())) {
+      errs.email = 'Email invalide (ex: marie@exemple.fr)';
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
