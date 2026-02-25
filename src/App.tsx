@@ -111,6 +111,7 @@ function AppInner() {
               <Payment
                 clientInfo={clientInfo}
                 onBack={() => goTo('client')}
+                onEditCart={() => goTo('studio')}
               />
             )}
           </motion.div>

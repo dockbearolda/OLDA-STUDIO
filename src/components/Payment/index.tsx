@@ -5,7 +5,8 @@ import type { ClientInfo, PaymentStatus } from '../../types';
 
 interface Props {
   clientInfo: ClientInfo;
-  onBack: () => void;
+  onBack: () => void;       // → étape client info
+  onEditCart: () => void;   // → retour Studio pour modifier le panier
 }
 
 // Generate order number like: Nom-Prenom-DDMMYY-HHMM
@@ -23,7 +24,7 @@ function generateOrderNo(info: ClientInfo): string {
   return `${namePart}-${dd}${mm}${yy}-${hh}${mi}`;
 }
 
-export default function Payment({ clientInfo, onBack }: Props) {
+export default function Payment({ clientInfo, onBack, onEditCart }: Props) {
   const { items, total, clearCart } = useCart();
   const [payStatus, setPayStatus]   = useState<PaymentStatus>('unpaid');
   const [loading, setLoading]       = useState(false);
@@ -296,6 +297,11 @@ export default function Payment({ clientInfo, onBack }: Props) {
 
       <button className="btn btn-ghost" onClick={onBack} disabled={loading}>
         ← Modifier les informations
+      </button>
+
+      <button className="btn btn-ghost" onClick={onEditCart} disabled={loading}
+        style={{ color: 'var(--accent)', borderColor: 'rgba(0,122,255,0.25)' }}>
+        ← Modifier le panier
       </button>
     </div>
   );

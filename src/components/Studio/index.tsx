@@ -20,7 +20,6 @@ const DEFAULT_LOGO_BACK: LogoPlacement = {
   x: 47.9, y: 31, w: 30, color: '#1A1A1A',
 };
 
-// ── Build refs for a collection prefix ─────────────────
 function buildRefs(prefix: string) {
   return Array.from({ length: 10 }, (_, i) => {
     const code = `${prefix.toUpperCase()[0]}-${String(i + 1).padStart(3, '0')}`;
@@ -30,7 +29,6 @@ function buildRefs(prefix: string) {
   });
 }
 
-// ── Generate a unique cart item id ─────────────────────
 function uid(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
@@ -42,55 +40,51 @@ interface Props {
 export default function Studio({ onNext }: Props) {
   const { addItem } = useCart();
 
-  // ── Product config state ───────────────────────────────
-  const [famille, setFamille]     = useState<'textile' | 'mug'>('textile');
+  // ── Product config ──────────────────────────────────
   const [collection, setCollection] = useState('');
-  const [reference, setReference] = useState('');
-  const [taille, setTaille]       = useState('M');
-  const [color, setColor]         = useState<Color>(COLORS[0]);
-  const [note, setNote]           = useState('');
+  const [reference, setReference]   = useState('');
+  const [taille, setTaille]         = useState('M');
+  const [color, setColor]           = useState<Color>(COLORS[0]);
+  const [note, setNote]             = useState('');
   const [prixTshirt, setPrixTshirt] = useState(25);
   const [prixPerso, setPrixPerso]   = useState(0);
 
-  // ── T-shirt visual state ───────────────────────────────
-  const [side, setSide]           = useState<'front' | 'back'>('front');
-  const [svgFront, setSvgFront]   = useState('');
-  const [svgBack, setSvgBack]     = useState('');
-  const [logoAvant, setLogoAvant]    = useState<LogoPlacement>({ ...DEFAULT_LOGO });
-  const [logoArriere, setLogoArriere] = useState<LogoPlacement>({ ...DEFAULT_LOGO_BACK });
+  // ── T-shirt visual ───────────────────────────────────
+  const [side, setSide]             = useState<'front' | 'back'>('front');
+  const [svgFront, setSvgFront]     = useState('');
+  const [svgBack, setSvgBack]       = useState('');
+  const [logoAvant, setLogoAvant]      = useState<LogoPlacement>({ ...DEFAULT_LOGO });
+  const [logoArriere, setLogoArriere]  = useState<LogoPlacement>({ ...DEFAULT_LOGO_BACK });
 
-  // ── Logo sheet ─────────────────────────────────────────
+  // ── Logo sheet ───────────────────────────────────────
   const [showSheet, setShowSheet] = useState(false);
 
-  // ── Drag state ─────────────────────────────────────────
-  const [dragging, setDragging] = useState(false);
-  const stageRef = useRef<HTMLDivElement>(null);
-  const dragOffsetRef = useRef({ dx: 0, dy: 0 });
+  // ── Drag ─────────────────────────────────────────────
+  const [dragging, setDragging]   = useState(false);
+  const stageRef                  = useRef<HTMLDivElement>(null);
+  const dragOffsetRef             = useRef({ dx: 0, dy: 0 });
 
-  // ── Fetch SVGs ─────────────────────────────────────────
+  // ── Fetch SVGs ───────────────────────────────────────
   useEffect(() => {
     fetch('/tshirt-front.svg').then(r => r.text()).then(setSvgFront).catch(() => {});
     fetch('/tshirt-back.svg').then(r => r.text()).then(setSvgBack).catch(() => {});
   }, []);
 
-  // ── Auto-price from reference ──────────────────────────
   useEffect(() => {
     const ref = REFERENCES[reference];
     if (ref) setPrixTshirt(ref.prix);
   }, [reference]);
 
-  // ── Computed values ────────────────────────────────────
-  const total     = prixTshirt + prixPerso;
-  const refOpts   = collection ? buildRefs(collection) : [];
-  const currentLogo = side === 'front' ? logoAvant : logoArriere;
+  const total       = prixTshirt + prixPerso;
+  const refOpts     = collection ? buildRefs(collection) : [];
+  const currentLogo    = side === 'front' ? logoAvant    : logoArriere;
   const setCurrentLogo = side === 'front' ? setLogoAvant : setLogoArriere;
 
-  // ── Render colored SVG ─────────────────────────────────
   function renderSvg(raw: string): string {
     return applyFabricColor(raw, color.h);
   }
 
-  // ── Logo drag handlers ─────────────────────────────────
+  // ── Drag handlers ──────────────────────────────────
   const onLogoPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (!currentLogo.id && !currentLogo.url) return;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -98,11 +92,9 @@ export default function Studio({ onNext }: Props) {
     const stage = stageRef.current;
     if (!stage) return;
     const rect = stage.getBoundingClientRect();
-    const logoX = (currentLogo.x / 100) * rect.width;
-    const logoY = (currentLogo.y / 100) * rect.height;
     dragOffsetRef.current = {
-      dx: e.clientX - rect.left - logoX,
-      dy: e.clientY - rect.top  - logoY,
+      dx: e.clientX - rect.left - (currentLogo.x / 100) * rect.width,
+      dy: e.clientY - rect.top  - (currentLogo.y / 100) * rect.height,
     };
   }, [currentLogo]);
 
@@ -111,25 +103,17 @@ export default function Studio({ onNext }: Props) {
     const stage = stageRef.current;
     if (!stage) return;
     const rect = stage.getBoundingClientRect();
-    const rawX = e.clientX - rect.left - dragOffsetRef.current.dx;
-    const rawY = e.clientY - rect.top  - dragOffsetRef.current.dy;
-    const newX = Math.min(100, Math.max(0, (rawX / rect.width)  * 100));
-    const newY = Math.min(100, Math.max(0, (rawY / rect.height) * 100));
+    const newX = Math.min(100, Math.max(0, ((e.clientX - rect.left - dragOffsetRef.current.dx) / rect.width)  * 100));
+    const newY = Math.min(100, Math.max(0, ((e.clientY - rect.top  - dragOffsetRef.current.dy) / rect.height) * 100));
     setCurrentLogo(prev => ({ ...prev, x: newX, y: newY }));
   }, [dragging, setCurrentLogo]);
 
-  const onLogoPointerUp = useCallback(() => {
-    setDragging(false);
-  }, []);
+  const onLogoPointerUp = useCallback(() => setDragging(false), []);
 
-  // ── Pick logo from sheet ───────────────────────────────
+  // ── Pick logo ────────────────────────────────────────
   function pickAtelier(logoId: string, svg: string, name: string) {
-    const pos = side === 'front'
-      ? { x: 66.5, y: 28, w: 19 }
-      : { x: 47.9, y: 31, w: 30 };
-    setCurrentLogo(prev => ({
-      ...prev, id: logoId, type: 'atelier', svg, url: null, name, ...pos,
-    }));
+    const pos = side === 'front' ? { x: 66.5, y: 28, w: 19 } : { x: 47.9, y: 31, w: 30 };
+    setCurrentLogo(prev => ({ ...prev, id: logoId, type: 'atelier', svg, url: null, name, ...pos }));
     setShowSheet(false);
   }
 
@@ -139,12 +123,8 @@ export default function Studio({ onNext }: Props) {
     const reader = new FileReader();
     reader.onload = ev => {
       const url = ev.target?.result as string;
-      const pos = side === 'front'
-        ? { x: 66.5, y: 28, w: 19 }
-        : { x: 47.9, y: 31, w: 30 };
-      setCurrentLogo(prev => ({
-        ...prev, id: 'upload', type: 'upload', svg: null, url, name: file.name, ...pos,
-      }));
+      const pos = side === 'front' ? { x: 66.5, y: 28, w: 19 } : { x: 47.9, y: 31, w: 30 };
+      setCurrentLogo(prev => ({ ...prev, id: 'upload', type: 'upload', svg: null, url, name: file.name, ...pos }));
       setShowSheet(false);
     };
     reader.readAsDataURL(file);
@@ -152,57 +132,44 @@ export default function Studio({ onNext }: Props) {
   }
 
   function removeLogo() {
-    setCurrentLogo(side === 'front'
-      ? { ...DEFAULT_LOGO }
-      : { ...DEFAULT_LOGO_BACK }
-    );
+    setCurrentLogo(side === 'front' ? { ...DEFAULT_LOGO } : { ...DEFAULT_LOGO_BACK });
   }
 
-  // ── Add to cart ────────────────────────────────────────
+  // ── Add to cart ──────────────────────────────────────
   function addToCart() {
     if (!collection || !reference || !taille) {
       alert('Veuillez sélectionner une collection, une référence et une taille.');
       return;
     }
     const item: CartItem = {
-      id: uid(),
-      famille,
-      collection,
-      reference,
-      couleur: color,
-      taille,
-      logoAvant,
-      logoArriere,
-      note,
+      id: uid(), famille: 'textile', collection, reference,
+      couleur: color, taille, logoAvant, logoArriere, note,
       prix: { tshirt: prixTshirt, personnalisation: prixPerso, total },
       addedAt: new Date().toISOString(),
     };
     addItem(item);
-
-    // Reset visual state for next item
-    setNote('');
-    setReference('');
+    // Reset for next item
+    setNote(''); setReference('');
     setLogoAvant({ ...DEFAULT_LOGO });
     setLogoArriere({ ...DEFAULT_LOGO_BACK });
   }
 
-  // ── Render logo overlay on SVG ─────────────────────────
-  function renderLogoOverlay(logo: LogoPlacement, isActive: boolean) {
-    if (!isActive) return null;
-    if (!logo.id && !logo.url) {
-      // Show tap pip
-      const pipClass = side === 'front' ? 'logo-tap-front' : 'logo-tap-back';
+  // ── Logo overlay (FIX: toujours visible sur les 2 côtés) ──
+  function renderLogoOverlay(logo: LogoPlacement, isActive: boolean, sideKey: 'front' | 'back') {
+    const hasLogo = !!(logo.id || logo.url);
+
+    if (!hasLogo) {
+      // Pip d'ajout uniquement sur le côté actif
+      if (!isActive) return null;
+      const cls = sideKey === 'front' ? 'logo-tap-front' : 'logo-tap-back';
       return (
-        <div
-          className={pipClass}
-          onClick={() => setShowSheet(true)}
-          title="Ajouter un logo"
-        >
+        <div className={cls} onClick={() => setShowSheet(true)} title="Ajouter un logo">
           <div className="logo-tap-pip">＋</div>
         </div>
       );
     }
 
+    // Logo présent → visible des DEUX côtés ; drag uniquement sur le côté actif
     return (
       <div
         className="logo-zone"
@@ -210,12 +177,13 @@ export default function Studio({ onNext }: Props) {
           left: `${logo.x}%`,
           top:  `${logo.y}%`,
           width: `${logo.w}%`,
-          cursor: dragging ? 'grabbing' : 'grab',
+          cursor: isActive ? (dragging ? 'grabbing' : 'grab') : 'default',
+          pointerEvents: isActive ? 'auto' : 'none',
         }}
-        onPointerDown={onLogoPointerDown}
-        onPointerMove={onLogoPointerMove}
-        onPointerUp={onLogoPointerUp}
-        onPointerCancel={onLogoPointerUp}
+        onPointerDown={isActive ? onLogoPointerDown : undefined}
+        onPointerMove={isActive ? onLogoPointerMove : undefined}
+        onPointerUp={isActive ? onLogoPointerUp : undefined}
+        onPointerCancel={isActive ? onLogoPointerUp : undefined}
       >
         <div className="logo-inner">
           {logo.type === 'atelier' && logo.svg ? (
@@ -227,7 +195,7 @@ export default function Studio({ onNext }: Props) {
             <img src={logo.url} alt={logo.name ?? 'logo'} />
           ) : null}
         </div>
-        <div className="logo-frame" />
+        {isActive && <div className="logo-frame" />}
       </div>
     );
   }
@@ -235,180 +203,165 @@ export default function Studio({ onNext }: Props) {
   return (
     <div className="step-panel" style={{ gap: 12 }}>
 
-      {/* ── FAMILLE ───────────────────────────────── */}
+      {/* ── FAMILLE (vertical, mug disabled) ──────── */}
       <div className="card">
         <div className="card-title">Type de produit</div>
         <div className="card-body">
-          <div className="family-grid">
-            {([['textile', '👕', 'T-Shirt', 'Personnalisé DTF'], ['mug', '☕', 'Mug', 'Sublimation']] as const).map(
-              ([fam, icon, label, sub]) => (
-                <button
-                  key={fam}
-                  className={`family-card ${famille === fam ? 'selected' : ''}`}
-                  onClick={() => setFamille(fam)}
-                >
-                  <div className="family-card-icon">{icon}</div>
-                  <div className="family-card-name">{label}</div>
-                  <div className="family-card-sub">{sub}</div>
-                </button>
-              )
-            )}
+
+          {/* Textile — sélectionné */}
+          <div className="family-row selected">
+            <div className="family-row-icon">👕</div>
+            <div className="family-row-text">
+              <div className="family-row-name">T-Shirt</div>
+              <div className="family-row-sub">Personnalisation DTF</div>
+            </div>
+            <div className="family-row-check">✓</div>
           </div>
+
+          {/* Mug — non cliquable */}
+          <div className="family-row disabled">
+            <div className="family-row-icon">☕</div>
+            <div className="family-row-text">
+              <div className="family-row-name">Mug</div>
+              <div className="family-row-sub">Sublimation</div>
+            </div>
+            <div className="family-row-soon">Bientôt</div>
+          </div>
+
         </div>
       </div>
 
       {/* ── T-SHIRT STUDIO ────────────────────────── */}
-      {famille === 'textile' && (
-        <>
-          {/* T-shirt visual */}
-          <div className="card">
-            <div className="card-title">Aperçu</div>
-            <div className="stage">
-              <div className="shirts-grid">
-                {(['front', 'back'] as const).map(s => {
-                  const raw = s === 'front' ? svgFront : svgBack;
-                  const logo = s === 'front' ? logoAvant : logoArriere;
-                  const active = side === s;
-                  return (
+      <>
+        {/* T-shirt visual */}
+        <div className="card">
+          <div className="card-title">Aperçu — cliquer pour changer de vue</div>
+          <div className="stage">
+            <div className="shirts-grid">
+              {(['front', 'back'] as const).map(s => {
+                const raw    = s === 'front' ? svgFront : svgBack;
+                const logo   = s === 'front' ? logoAvant : logoArriere;
+                const active = side === s;
+                return (
+                  <div
+                    key={s}
+                    className={`shirt-col ${active ? 'active' : ''}`}
+                    onClick={() => setSide(s)}
+                  >
+                    <div className="shirt-side-label">
+                      {s === 'front' ? 'Avant' : 'Arrière'}
+                    </div>
                     <div
-                      key={s}
-                      className={`shirt-col ${active ? 'active' : ''}`}
-                      onClick={() => setSide(s)}
+                      className="svg-view"
+                      ref={active ? stageRef : undefined}
+                      style={{ position: 'relative' }}
                     >
-                      <div className="shirt-side-label">
-                        {s === 'front' ? 'Avant' : 'Arrière'}
-                      </div>
-                      <div
-                        className="svg-view"
-                        ref={active ? stageRef : undefined}
-                        style={{ position: 'relative' }}
-                      >
-                        {raw ? (
-                          <div
-                            className="svg-box"
-                            dangerouslySetInnerHTML={{ __html: renderSvg(raw) }}
-                          />
-                        ) : (
-                          <div style={{ width: '100%', height: '100%', background: 'rgba(0,0,0,0.04)', borderRadius: 8 }} />
-                        )}
-                        {renderLogoOverlay(logo, active)}
-                      </div>
+                      {raw ? (
+                        <div
+                          className="svg-box"
+                          dangerouslySetInnerHTML={{ __html: renderSvg(raw) }}
+                        />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', background: 'rgba(0,0,0,0.04)', borderRadius: 8 }} />
+                      )}
+                      {/* Logo toujours visible, drag uniquement sur côté actif */}
+                      {renderLogoOverlay(logo, active, s)}
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })}
+            </div>
 
-              {/* Logo controls float bar */}
-              <AnimatePresence>
-                {(currentLogo.id || currentLogo.url) && (
-                  <motion.div
-                    className="logo-float-bar"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <span className="fbar-label">
-                      {currentLogo.name ?? 'Logo'} · {side === 'front' ? 'Avant' : 'Arrière'}
-                    </span>
-                    <button
-                      className="fbar-btn fbar-change"
-                      onClick={() => setShowSheet(true)}
-                    >
-                      Changer
-                    </button>
-                    <button className="fbar-btn fbar-delete" onClick={removeLogo}>
-                      Suppr.
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Logo scale + color (when logo present) */}
-              <AnimatePresence>
-                {(currentLogo.id || currentLogo.url) && (
-                  <motion.div
-                    style={{ padding: '0 12px 10px' }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <div className="logo-scale-row">
-                      <span className="text-xs text-3">Taille</span>
-                      <input
-                        type="range"
-                        min="8"
-                        max="70"
-                        value={currentLogo.w}
-                        onChange={e => setCurrentLogo(prev => ({ ...prev, w: +e.target.value }))}
-                        style={{ flex: 1, accentColor: 'var(--accent)' }}
-                      />
-                      <span className="text-xs text-3">{Math.round(currentLogo.w)}%</span>
-                    </div>
-                    {currentLogo.type === 'atelier' && (
-                      <div style={{ marginTop: 8 }}>
-                        <div className="text-xs text-3" style={{ marginBottom: 6 }}>Couleur logo</div>
-                        <div className="logo-colors">
-                          {LOGO_COLORS.map(lc => (
-                            <button
-                              key={lc.h}
-                              className={`logo-color-swatch ${currentLogo.color === lc.h ? 'selected' : ''}`}
-                              style={{
-                                background: lc.h,
-                                boxShadow: lc.h === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.12)' : undefined,
-                              }}
-                              title={lc.n}
-                              onClick={() => setCurrentLogo(prev => ({ ...prev, color: lc.h }))}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Add logo tap area when no logo yet (not currently on the side) */}
-              {!currentLogo.id && !currentLogo.url && (
-                <div style={{ padding: '0 12px 10px' }}>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    style={{ width: 'auto', paddingLeft: 14, paddingRight: 14 }}
-                    onClick={() => setShowSheet(true)}
-                  >
-                    + Ajouter un logo ({side === 'front' ? 'Avant' : 'Arrière'})
+            {/* Float bar logo controls */}
+            <AnimatePresence>
+              {(currentLogo.id || currentLogo.url) && (
+                <motion.div
+                  className="logo-float-bar"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <span className="fbar-label">
+                    {currentLogo.name ?? 'Logo'} · {side === 'front' ? 'Avant' : 'Arrière'}
+                  </span>
+                  <button className="fbar-btn fbar-change" onClick={() => setShowSheet(true)}>
+                    Changer
                   </button>
-                </div>
+                  <button className="fbar-btn fbar-delete" onClick={removeLogo}>
+                    Suppr.
+                  </button>
+                </motion.div>
               )}
-            </div>
-          </div>
+            </AnimatePresence>
 
-          {/* Color picker */}
-          <div className="card">
-            <div className="card-title">Couleur du t-shirt — {color.n}</div>
-            <div className="card-body">
-              <div className="swatches-grid">
-                {COLORS.map(c => (
-                  <button
-                    key={c.h}
-                    className={`swatch ${color.h === c.h ? 'selected' : ''}`}
-                    style={{ background: c.h }}
-                    data-light={isLightColor(c.h) ? '1' : '0'}
-                    title={c.n}
-                    onClick={() => setColor(c)}
-                  />
-                ))}
+            {/* Couleur logo (sans curseur taille) */}
+            <AnimatePresence>
+              {(currentLogo.id || currentLogo.url) && currentLogo.type === 'atelier' && (
+                <motion.div
+                  style={{ padding: '0 12px 10px' }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <div className="text-xs text-3" style={{ marginBottom: 6 }}>Couleur logo</div>
+                  <div className="logo-colors">
+                    {LOGO_COLORS.map(lc => (
+                      <button
+                        key={lc.h}
+                        className={`logo-color-swatch ${currentLogo.color === lc.h ? 'selected' : ''}`}
+                        style={{
+                          background: lc.h,
+                          boxShadow: lc.h === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.12)' : undefined,
+                        }}
+                        title={lc.n}
+                        onClick={() => setCurrentLogo(prev => ({ ...prev, color: lc.h }))}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Bouton ajout logo si aucun logo sur ce côté */}
+            {!currentLogo.id && !currentLogo.url && (
+              <div style={{ padding: '0 12px 10px' }}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ width: 'auto', paddingLeft: 14, paddingRight: 14 }}
+                  onClick={() => setShowSheet(true)}
+                >
+                  + Logo {side === 'front' ? 'Avant' : 'Arrière'}
+                </button>
               </div>
+            )}
+          </div>
+        </div>
+
+        {/* Color picker */}
+        <div className="card">
+          <div className="card-title">Couleur — {color.n}</div>
+          <div className="card-body">
+            <div className="swatches-grid">
+              {COLORS.map(c => (
+                <button
+                  key={c.h}
+                  className={`swatch ${color.h === c.h ? 'selected' : ''}`}
+                  style={{ background: c.h }}
+                  data-light={isLightColor(c.h) ? '1' : '0'}
+                  title={c.n}
+                  onClick={() => setColor(c)}
+                />
+              ))}
             </div>
           </div>
-        </>
-      )}
+        </div>
+      </>
 
-      {/* ── PRODUCT DETAILS ───────────────────────── */}
+      {/* ── RÉFÉRENCE ─────────────────────────────── */}
       <div className="card">
         <div className="card-title">Référence produit</div>
         <div className="card-body">
-          {/* Collection */}
           <div>
             <div className="label" style={{ marginBottom: 6 }}>Collection</div>
             <select
@@ -423,80 +376,75 @@ export default function Studio({ onNext }: Props) {
             </select>
           </div>
 
-          {/* Ref + Size */}
-          <div className="grid-2">
-            <div>
-              <div className="label" style={{ marginBottom: 6 }}>Référence</div>
-              <select
-                className="native-select"
-                value={reference}
-                onChange={e => setReference(e.target.value)}
-                disabled={!collection}
-              >
-                <option value="">—</option>
-                {refOpts.map(r => (
-                  <option key={r.value} value={r.value}>{r.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <div className="label" style={{ marginBottom: 6 }}>Taille</div>
-              <select
-                className="native-select"
-                value={taille}
-                onChange={e => setTaille(e.target.value)}
-              >
-                {SIZES.map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <div className="label" style={{ marginBottom: 6 }}>Référence</div>
+            <select
+              className="native-select"
+              value={reference}
+              onChange={e => setReference(e.target.value)}
+              disabled={!collection}
+            >
+              <option value="">—</option>
+              {refOpts.map(r => (
+                <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </select>
           </div>
 
-          {/* Notes */}
           <div>
-            <div className="label" style={{ marginBottom: 6 }}>Notes / instructions</div>
+            <div className="label" style={{ marginBottom: 6 }}>Taille</div>
+            <select
+              className="native-select"
+              value={taille}
+              onChange={e => setTaille(e.target.value)}
+            >
+              {SIZES.map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <div className="label" style={{ marginBottom: 6 }}>Notes</div>
             <textarea
               className="input"
               rows={2}
-              placeholder="Ex: logo sur la manche, couleur spécifique…"
+              placeholder="Ex: logo sur la manche…"
               value={note}
               onChange={e => setNote(e.target.value)}
-              style={{ resize: 'vertical', minHeight: 64 }}
+              style={{ resize: 'vertical', minHeight: 60 }}
             />
           </div>
         </div>
       </div>
 
-      {/* ── PRICE ─────────────────────────────────── */}
+      {/* ── PRIX ──────────────────────────────────── */}
       <div className="card">
         <div className="card-title">Tarification</div>
         <div className="card-body">
-          <div className="grid-2">
-            <div>
-              <div className="label" style={{ marginBottom: 6 }}>Support</div>
-              <select
-                className="native-select"
-                value={prixTshirt}
-                onChange={e => setPrixTshirt(+e.target.value)}
-              >
-                {PRICE_TSHIRT.map(p => (
-                  <option key={p} value={p}>{p} €</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <div className="label" style={{ marginBottom: 6 }}>Personnalisation</div>
-              <select
-                className="native-select"
-                value={prixPerso}
-                onChange={e => setPrixPerso(+e.target.value)}
-              >
-                {PRICE_PERSO.map(p => (
-                  <option key={p} value={p}>{p} €</option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <div className="label" style={{ marginBottom: 6 }}>Support</div>
+            <select
+              className="native-select"
+              value={prixTshirt}
+              onChange={e => setPrixTshirt(+e.target.value)}
+            >
+              {PRICE_TSHIRT.map(p => (
+                <option key={p} value={p}>{p} €</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <div className="label" style={{ marginBottom: 6 }}>Personnalisation</div>
+            <select
+              className="native-select"
+              value={prixPerso}
+              onChange={e => setPrixPerso(+e.target.value)}
+            >
+              {PRICE_PERSO.map(p => (
+                <option key={p} value={p}>{p} €</option>
+              ))}
+            </select>
           </div>
 
           <div className="total-bubble">
@@ -516,7 +464,7 @@ export default function Studio({ onNext }: Props) {
         Informations client →
       </button>
 
-      {/* ── LOGO SELECTOR BOTTOM SHEET ────────────── */}
+      {/* ── LOGO SHEET ────────────────────────────── */}
       <AnimatePresence>
         {showSheet && (
           <LogoSheet
@@ -531,7 +479,7 @@ export default function Studio({ onNext }: Props) {
   );
 }
 
-// ── Logo Sheet ──────────────────────────────────────────
+// ── Logo Bottom Sheet ───────────────────────────────────
 interface SheetProps {
   onClose: () => void;
   onPickAtelier: (id: string, svg: string, name: string) => void;
@@ -589,12 +537,8 @@ function LogoSheet({ onClose, onPickAtelier, onPickUpload, currentId }: SheetPro
             </div>
           ))}
 
-          {/* Upload */}
           <div className="sheet-section-title">Votre logo</div>
-          <div
-            className="upload-row"
-            onClick={() => inputRef.current?.click()}
-          >
+          <div className="upload-row" onClick={() => inputRef.current?.click()}>
             <span style={{ fontSize: 22 }}>📁</span>
             <div>
               <div className="fw-600" style={{ fontSize: 14 }}>Importer un fichier</div>
@@ -608,7 +552,6 @@ function LogoSheet({ onClose, onPickAtelier, onPickUpload, currentId }: SheetPro
             style={{ display: 'none' }}
             onChange={onPickUpload}
           />
-
           <div style={{ height: 32 }} />
         </div>
       </motion.div>

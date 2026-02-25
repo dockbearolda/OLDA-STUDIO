@@ -965,42 +965,60 @@ body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── FAMILY CARDS ── */
-.family-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.family-card {
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px 12px;
-  cursor: pointer;
+/* ── FAMILY ROWS (vertical, 1 par ligne) ── */
+.family-row {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  background: var(--card);
-  transition: all 0.15s;
-  touch-action: manipulation;
-}
-.family-card:active { transform: scale(0.97); }
-.family-card.selected {
-  border-color: var(--accent);
-  background: rgba(0,122,255,0.04);
+  gap: 14px;
+  padding: 13px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.family-card-icon { font-size: 32px; }
-.family-card-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-1);
+.family-row.selected {
+  border-color: var(--accent);
+  background: rgba(0,122,255,0.05);
 }
-.family-card-sub {
+
+.family-row.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.family-row-icon { font-size: 24px; flex-shrink: 0; line-height: 1; }
+
+.family-row-text { flex: 1; }
+
+.family-row-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.02em;
+}
+
+.family-row-sub {
   font-size: 12px;
   color: var(--text-2);
-  text-align: center;
+  margin-top: 1px;
+}
+
+.family-row-check {
+  font-size: 16px;
+  color: var(--accent);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.family-row-soon {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  background: rgba(0,0,0,0.06);
+  border-radius: 6px;
+  padding: 3px 8px;
+  flex-shrink: 0;
 }
 
 /* ── UTILITY ── */
