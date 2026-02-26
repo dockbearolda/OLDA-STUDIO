@@ -27,7 +27,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(loadCart);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // QuotaExceededError : on re-tente sans les données base64 (images uploadées)
+      try {
+        const stripped = items.map(item => ({
+          ...item,
+          logoAvant:   { ...item.logoAvant,   url: null },
+          logoArriere: { ...item.logoArriere, url: null },
+        }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stripped));
+      } catch {
+        // Si toujours impossible, on ne plante pas — le panier reste en mémoire
+        console.warn('[Cart] localStorage plein — sauvegarde du panier impossible.');
+      }
+    }
   }, [items]);
 
   const addItem = (item: CartItem) => setItems(prev => [...prev, item]);

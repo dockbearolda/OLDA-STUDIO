@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Component, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CartProvider } from './context/CartContext';
 import Studio from './components/Studio';
@@ -7,6 +7,31 @@ import Payment from './components/Payment';
 import CartBadge from './components/CartBadge';
 import CartDrawer from './components/CartDrawer';
 import type { Step, ClientInfo, CartItem } from './types';
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 24, gap: 16, textAlign: 'center' }}>
+          <div style={{ fontSize: 40 }}>⚠️</div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Une erreur est survenue</div>
+          <div style={{ fontSize: 13, color: '#666', maxWidth: 320 }}>
+            {(this.state.error as Error).message || 'Erreur inattendue'}
+          </div>
+          <button
+            style={{ marginTop: 8, padding: '10px 24px', borderRadius: 10, background: '#007AFF', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+            onClick={() => { localStorage.removeItem('olda_cart_v1'); window.location.reload(); }}
+          >
+            Réinitialiser et recharger
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const STEP_LABELS: Record<Step, string> = {
   studio:  'Studio',
@@ -145,8 +170,10 @@ function AppInner() {
 
 export default function App() {
   return (
-    <CartProvider>
-      <AppInner />
-    </CartProvider>
+    <ErrorBoundary>
+      <CartProvider>
+        <AppInner />
+      </CartProvider>
+    </ErrorBoundary>
   );
 }

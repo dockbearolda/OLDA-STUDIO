@@ -1,6 +1,8 @@
 import {
   useState, useEffect, useRef, useCallback, type PointerEvent,
 } from 'react';
+
+const MAX_UPLOAD_BYTES = 2 * 1024 * 1024; // 2 MB
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import type { CartItem, Color, LogoPlacement } from '../../types';
@@ -63,6 +65,7 @@ export default function Studio({ onNext, editItem, onDoneEditing, onOpenCart }: 
   // ── Logo sheet ───────────────────────────────────────
   const [showSheet, setShowSheet] = useState(false);
   const [addedFlash, setAddedFlash] = useState(false);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function resetForm() {
     setCollection(''); setReference(''); setTaille('M');
@@ -159,6 +162,11 @@ export default function Studio({ onNext, editItem, onDoneEditing, onOpenCart }: 
   function pickUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      alert(`Image trop lourde (${(file.size / 1024 / 1024).toFixed(1)} Mo). Limite : 2 Mo.`);
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = ev => {
       const url = ev.target?.result as string;
@@ -189,11 +197,18 @@ export default function Studio({ onNext, editItem, onDoneEditing, onOpenCart }: 
     addItem(item);
     resetForm();
     setAddedFlash(true);
-    setTimeout(() => {
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    flashTimerRef.current = setTimeout(() => {
       setAddedFlash(false);
       onOpenCart?.();
+      flashTimerRef.current = null;
     }, 800);
   }
+
+  // Nettoyage du timer au démontage
+  useEffect(() => () => {
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+  }, []);
 
   // ── Update existing cart item ────────────────────────
   function saveEdit() {
