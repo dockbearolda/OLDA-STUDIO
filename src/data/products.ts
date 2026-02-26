@@ -160,3 +160,11 @@ export function isLightColor(hex: string): boolean {
   const b = parseInt(hex.slice(5, 7), 16);
   return (r * 299 + g * 587 + b * 114) / 1000 > 200;
 }
+
+/** Minimal monochrome product type icons */
+export const PRODUCT_ICONS = {
+  'tshirt': `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><path d="M 30 20 L 45 35 L 45 90 Q 45 100 55 100 Q 65 100 65 90 L 65 35 L 80 20 L 80 30 L 60 50 L 60 100 L 50 100 L 50 50 L 30 30 Z" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>`,
+  'hoodie': `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><path d="M 40 35 Q 30 35 25 45 L 25 100 Q 25 105 30 105 L 90 105 Q 95 105 95 100 L 95 45 Q 90 35 80 35 L 70 35 L 70 20 Q 70 15 65 15 L 55 15 Q 50 15 50 20 L 50 35 L 40 35 M 60 35 L 60 50 Q 60 55 55 55 L 55 75 L 65 75 L 65 55 Q 60 55 60 50 Z" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>`,
+  'mug': `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect x="25" y="30" width="55" height="60" rx="4" stroke="currentColor" stroke-width="2.5" fill="none"/><path d="M 80 40 Q 95 45 95 60 Q 95 75 80 80" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="35" y1="50" x2="70" y2="50" stroke="currentColor" stroke-width="1.5" opacity="0.5"/></svg>`,
+  'hat': `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><path d="M 30 60 L 35 35 L 85 35 L 90 60 Z" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round"/><path d="M 28 62 L 92 62 Q 95 62 95 65 L 95 90 Q 95 100 85 105 L 35 105 Q 25 100 25 90 L 25 65 Q 25 62 28 62" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round"/></svg>`,
+};

@@ -6,7 +6,7 @@ import { useCart } from '../../context/CartContext';
 import type { CartItem, Color, LogoPlacement } from '../../types';
 import {
   COLORS, LOGO_COLORS, REFERENCES, COLLECTIONS, SIZES,
-  PRICE_TSHIRT, PRICE_PERSO, LOGO_SECTIONS,
+  PRICE_TSHIRT, PRICE_PERSO, LOGO_SECTIONS, PRODUCT_ICONS,
   applyFabricColor, isLightColor,
 } from '../../data/products';
 
@@ -265,7 +265,7 @@ export default function Studio({ onNext, editItem, onDoneEditing }: Props) {
 
           {/* Textile — sélectionné */}
           <div className="family-row selected">
-            <div className="family-row-icon">👕</div>
+            <div className="family-row-icon" dangerouslySetInnerHTML={{ __html: PRODUCT_ICONS.tshirt }} />
             <div className="family-row-text">
               <div className="family-row-name">T-Shirt</div>
               <div className="family-row-sub">Personnalisation DTF</div>
@@ -275,7 +275,7 @@ export default function Studio({ onNext, editItem, onDoneEditing }: Props) {
 
           {/* Mug — non cliquable */}
           <div className="family-row disabled">
-            <div className="family-row-icon">☕</div>
+            <div className="family-row-icon" dangerouslySetInnerHTML={{ __html: PRODUCT_ICONS.mug }} />
             <div className="family-row-text">
               <div className="family-row-name">Mug</div>
               <div className="family-row-sub">Sublimation</div>
