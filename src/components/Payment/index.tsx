@@ -7,6 +7,7 @@ interface Props {
   clientInfo: ClientInfo;
   onBack: () => void;       // → étape client info
   onEditCart: () => void;   // → retour Studio pour modifier le panier
+  onSuccess?: () => void;   // → nouvelle commande (réinitialise et retour Studio)
 }
 
 // Generate order number like: Nom-Prenom-DDMMYY-HHMM
@@ -24,7 +25,7 @@ function generateOrderNo(info: ClientInfo): string {
   return `${namePart}-${dd}${mm}${yy}-${hh}${mi}`;
 }
 
-export default function Payment({ clientInfo, onBack, onEditCart }: Props) {
+export default function Payment({ clientInfo, onBack, onEditCart, onSuccess }: Props) {
   const { items, total, clearCart } = useCart();
   const [payStatus, setPayStatus]   = useState<PaymentStatus>('unpaid');
   const [loading, setLoading]       = useState(false);
@@ -129,10 +130,16 @@ export default function Payment({ clientInfo, onBack, onEditCart }: Props) {
   // ── Success screen (Apple-style notification) ─────────────────────
   useEffect(() => {
     if (success) {
-      const timer = setTimeout(() => window.location.reload(), 2500);
+      const timer = setTimeout(() => {
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          window.location.reload();
+        }
+      }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [success]);
+  }, [success, onSuccess]);
 
   if (success) {
     return (
