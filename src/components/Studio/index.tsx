@@ -290,7 +290,6 @@ export default function Studio({ onNext, editItem, onDoneEditing }: Props) {
       <>
         {/* T-shirt visual */}
         <div className="card">
-          <div className="card-title">Aperçu — cliquer pour changer de vue</div>
           <div className="stage">
             <div className="shirts-grid">
               {(['front', 'back'] as const).map(s => {

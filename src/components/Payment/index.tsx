@@ -30,6 +30,17 @@ export default function Payment({ clientInfo, onBack, onEditCart }: Props) {
   const [loading, setLoading]       = useState(false);
   const [success, setSuccess]       = useState(false);
   const [error, setError]           = useState('');
+  const [exchangeRate, setExchangeRate] = useState(1.08); // EUR to USD default
+
+  // Fetch USD exchange rate on mount
+  React.useEffect(() => {
+    fetch('https://api.exchangerate-api.com/v4/latest/EUR')
+      .then(r => r.json())
+      .then(d => {
+        if (d?.rates?.USD) setExchangeRate(d.rates.USD);
+      })
+      .catch(() => {/* silently fail, use default */});
+  }, []);
 
   // ── Build DASHOLDA payload ─────────────────────────────
   async function submit() {
@@ -37,8 +48,9 @@ export default function Payment({ clientInfo, onBack, onEditCart }: Props) {
       setError('Votre panier est vide. Ajoutez au moins un article.');
       return;
     }
-    if (!clientInfo.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(clientInfo.email.trim())) {
-      setError('Adresse email manquante ou invalide — retournez à l\'étape précédente pour la corriger.');
+    /* Email optionnel ; si fourni, valider le format */
+    if (clientInfo.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(clientInfo.email.trim())) {
+      setError('Email invalide — retournez à l\'étape précédente pour la corriger.');
       return;
     }
     if (!clientInfo.nom.trim() || !clientInfo.prenom.trim()) {
@@ -114,57 +126,59 @@ export default function Payment({ clientInfo, onBack, onEditCart }: Props) {
     }
   }
 
-  // ── Success screen ─────────────────────────────────────
+  // ── Success screen (Apple-style notification) ─────────────────────
+  React.useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => window.location.reload(), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   if (success) {
     return (
-      <div className="step-panel">
-        <div className="card">
-          <div className="card-body" style={{ gap: 0 }}>
-            <div className="success-screen">
-              <motion.div
-                className="success-icon"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 }}
-              >
-                ✓
-              </motion.div>
-              <motion.div
-                className="success-title"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 }}
-              >
-                Commande envoyée !
-              </motion.div>
-              <motion.div
-                className="success-sub"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                Votre commande a été transmise au Dashboard de l'atelier.
-                Mélina vous contactera dès que possible.
-              </motion.div>
-              <motion.button
-                className="btn btn-primary"
-                style={{ marginTop: 8 }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.55 }}
-                onClick={() => window.location.reload()}
-              >
-                Nouvelle commande
-              </motion.button>
+      <div className="step-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, y: -40 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 16,
+            textAlign: 'center',
+            padding: 24,
+          }}
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            style={{ fontSize: 60 }}
+          >
+            ✓
+          </motion.div>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-1)' }}>
+              Commande envoyée
+            </div>
+            <div style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 8 }}>
+              Votre commande a été transmise à l'atelier.
             </div>
           </div>
-        </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.4 }}
+            transition={{ delay: 1 }}
+            style={{ fontSize: 12, color: 'var(--text-3)' }}
+          >
+            Redirection en cours…
+          </motion.div>
+        </motion.div>
       </div>
     );
   }
 
-  const ht  = Math.round(total / 1.2 * 100) / 100;
-  const tva = Math.round((total - ht) * 100) / 100;
+  const totalInUSD = Math.round(total * exchangeRate * 100) / 100;
 
   return (
     <div className="step-panel" style={{ gap: 16 }}>
@@ -236,16 +250,16 @@ export default function Payment({ clientInfo, onBack, onEditCart }: Props) {
       {/* ── TOTAL ─────────────────────────────────── */}
       <div className="total-bubble">
         <div className="total-row">
-          <span>Montant HT</span>
-          <span>{ht.toFixed(2)} €</span>
+          <span>Total (EUR)</span>
+          <span>{total} €</span>
         </div>
         <div className="total-row">
-          <span>TVA (20%)</span>
-          <span>{tva.toFixed(2)} €</span>
+          <span className="text-sm text-2">Taux: {exchangeRate.toFixed(4)}</span>
+          <span className="text-sm text-2">1 € = {exchangeRate.toFixed(2)} $</span>
         </div>
         <div className="total-main">
-          <span className="total-label">Total TTC</span>
-          <span className="total-amount">{total} €</span>
+          <span className="total-label">Total (USD)</span>
+          <span className="total-amount">${totalInUSD.toFixed(2)}</span>
         </div>
       </div>
 

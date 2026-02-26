@@ -47,9 +47,8 @@ export default function ClientForm({ info, onChange, onNext }: Props) {
     if (!info.nom.trim())       errs.nom       = 'Requis';
     if (!info.prenom.trim())    errs.prenom    = 'Requis';
     if (!info.telephone.trim()) errs.telephone = 'Requis';
-    if (!info.email.trim()) {
-      errs.email = 'Requis';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(info.email.trim())) {
+    /* Email est optionnel */
+    if (info.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(info.email.trim())) {
       errs.email = 'Email invalide (ex: marie@exemple.fr)';
     }
     setErrors(errs);
@@ -128,9 +127,8 @@ export default function ClientForm({ info, onChange, onNext }: Props) {
 
           <Field
             label="Email" id="email" type="email"
-            placeholder="marie@exemple.fr"
+            placeholder="marie@exemple.fr (optionnel)"
             value={info.email} onChange={set('email')}
-            required
           />
           {errors.email && (
             <div style={{ color: 'var(--red)', fontSize: 12, marginTop: -8 }}>{errors.email}</div>
