@@ -188,9 +188,12 @@ function mapToDasholda(order) {
 
     return {
         orderNumber   : order.commande     || '',
+        nom           : order.nom          || '',
+        prenom        : order.prenom       || '',
         customerName,
         customerEmail,
         customerPhone : order.telephone    || '',
+        telephone     : order.telephone    || '',
         paymentStatus : paiement.statut === 'OUI' ? 'PAID' : 'PENDING',
         product_type,
         total         : totalVal,
@@ -201,7 +204,12 @@ function mapToDasholda(order) {
         notes,
         items,
         /* Adresse de livraison */
-        shippingAddress: order.adresse || null,
+        adresse       : order.adresse      || null,
+        shippingAddress: order.adresse     || null,
+        /* Fiche atelier */
+        visuelAvant   : fiche.visuelAvant  || fiche.mockupFront || null,
+        visuelArriere : fiche.visuelArriere || null,
+        fiche,
     };
 }
 
